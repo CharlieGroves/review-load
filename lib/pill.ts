@@ -153,10 +153,16 @@ export class Popover {
     const r = anchor.getBoundingClientRect();
     const w = card.offsetWidth;
     const h = card.offsetHeight;
-    const left = Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8);
-    const below = r.bottom + 6 + h < window.innerHeight;
-    card.style.left = `${left}px`;
-    card.style.top = `${below ? r.bottom + 6 : Math.max(8, r.top - h - 6)}px`;
+    // Sit beside the picker rather than over it, so the other people stay visible.
+    const beside = (anchor.closest('details-menu') ?? anchor).getBoundingClientRect();
+    if (beside.left - w - 8 >= 8) {
+      card.style.left = `${beside.left - w - 8}px`;
+      card.style.top = `${Math.min(Math.max(8, r.top - 12), window.innerHeight - h - 8)}px`;
+    } else {
+      const below = r.bottom + 6 + h < window.innerHeight;
+      card.style.left = `${Math.min(Math.max(8, r.right - w), window.innerWidth - w - 8)}px`;
+      card.style.top = `${below ? r.bottom + 6 : Math.max(8, r.top - h - 6)}px`;
+    }
     card.style.visibility = '';
   }
 
