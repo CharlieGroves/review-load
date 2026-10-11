@@ -1,0 +1,90 @@
+<!--
+  Hand-written to mirror the structure of GitHub's PR sidebar Reviewers block and
+  open picker (legacy server-rendered markup, observed October 2026). Logins are fake.
+  Update alongside lib/selectors.ts when GitHub changes the markup.
+-->
+<div id="partial-discussion-sidebar" class="js-socket-channel js-updatable-content">
+  <div class="discussion-sidebar-item sidebar-assignee js-discussion-sidebar-item position-relative">
+    <form id="pull-request-reviewers-form-1" class="js-issue-sidebar-form">
+      <details id="reviewers-select-menu" class="details-reset details-overlay select-menu hx_rsm" open>
+        <summary class="text-bold discussion-sidebar-heading discussion-sidebar-toggle hx_rsm-trigger">
+          Reviewers
+        </summary>
+        <details-menu class="js-discussion-sidebar-menu select-menu-modal position-absolute right-0">
+          <div class="hx_rsm-content">
+            <div class="select-menu-filters">
+              <input
+                type="text"
+                id="review-filter-field"
+                class="form-control js-filterable-field"
+                placeholder="Find a user"
+              />
+            </div>
+            <div class="select-menu-list">
+              <label class="select-menu-item text-normal" role="menuitemcheckbox" aria-checked="false" tabindex="0">
+                <input type="checkbox" value="101" name="reviewer_user_ids[]" hidden />
+                <div class="select-menu-item-gravatar"><img class="avatar-small mr-1 js-avatar avatar" alt="" /></div>
+                <div class="select-menu-item-text lh-condensed">
+                  <span class="select-menu-item-heading">
+                    <span class="js-username">alice-example</span>
+                    <span class="description js-description">Alice Example</span>
+                  </span>
+                  <span class="description d-block tmp-ml-4 pl-1">Recently reviewed</span>
+                </div>
+              </label>
+              <label class="select-menu-item text-normal" role="menuitemcheckbox" aria-checked="true" tabindex="0">
+                <input type="checkbox" value="102" name="reviewer_user_ids[]" hidden checked />
+                <div class="select-menu-item-gravatar"><img class="avatar-small mr-1 js-avatar avatar" alt="" /></div>
+                <div class="select-menu-item-text lh-condensed">
+                  <span class="select-menu-item-heading">
+                    <span class="js-username">bob-example</span>
+                    <span class="description js-description">Bob Example</span>
+                  </span>
+                </div>
+              </label>
+              <label
+                class="select-menu-item text-normal"
+                role="menuitemcheckbox"
+                aria-checked="false"
+                tabindex="0"
+                hidden
+              >
+                <input type="checkbox" value="103" name="reviewer_user_ids[]" hidden />
+                <div class="select-menu-item-text lh-condensed">
+                  <span class="select-menu-item-heading">
+                    <span class="js-username">carol-example</span>
+                  </span>
+                </div>
+              </label>
+              <label class="select-menu-item text-normal" role="menuitemcheckbox" aria-checked="false" tabindex="0">
+                <input type="checkbox" value="900" name="reviewer_team_ids[]" hidden />
+                <div class="select-menu-item-text lh-condensed">
+                  <span class="select-menu-item-heading">
+                    <span class="js-username">example-org/engineering</span>
+                    <span class="description js-description">Engineering</span>
+                  </span>
+                </div>
+              </label>
+            </div>
+          </div>
+        </details-menu>
+      </details>
+      <span class="css-truncate">
+        <p class="d-flex flex-items-center mb-2">
+          <span
+            class="d-flex min-width-0 js-hovercard-left flex-1"
+            data-hovercard-type="user"
+            data-hovercard-url="/users/bob-example/hovercard"
+          >
+            <img class="avatar avatar-user" alt="" />
+            <span class="css-truncate-target">bob-example</span>
+          </span>
+          <span class="reviewers-status-icon" aria-label="Awaiting requested review from bob-example"></span>
+        </p>
+      </span>
+    </form>
+  </div>
+  <div class="discussion-sidebar-item">
+    <a data-hovercard-url="/users/dave-example/hovercard">dave-example</a>
+  </div>
+</div>

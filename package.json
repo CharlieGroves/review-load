@@ -1,0 +1,32 @@
+{
+  "name": "reviewload",
+  "description": "See each teammate's pending review requests in GitHub's reviewer picker.",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "happy-dom": "^20.14.6",
+    "msw": "^2.15.0",
+    "prettier": "^3.9.10",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.5",
+    "vitest": "^5.0.3",
+    "web-ext": "^10.5.0",
+    "wxt": "^0.21.3"
+  },
+  "license": "MIT"
+}

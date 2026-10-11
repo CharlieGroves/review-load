@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReviewLoad options</title>
+    <meta name="manifest.open_in_tab" content="true" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <main>
+      <h1>ReviewLoad</h1>
+      <p class="lede">Shows how many review requests each teammate is waiting on, right in GitHub's Reviewers menu.</p>
+
+      <section>
+        <h2>GitHub token</h2>
+        <p>
+          Create a <strong>fine-grained token</strong> with read-only access: choose your organisation as the resource
+          owner, <em>All repositories</em>, and <em>Pull requests: Read</em>. Set an expiry.
+          <a id="create-token" target="_blank" rel="noopener">Create a token on GitHub ↗</a>
+        </p>
+        <p class="hint">
+          A fine-grained token covers one owner (one organisation or your personal account). Organisations may need to
+          approve it, and SAML SSO organisations need it authorised.
+        </p>
+        <form id="token-form">
+          <label for="token">Token</label>
+          <div class="row">
+            <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" />
+            <button type="submit">Save and check</button>
+            <button type="button" id="remove" class="secondary">Remove</button>
+          </div>
+        </form>
+        <p id="token-status" role="status" aria-live="polite"></p>
+        <p class="hint">
+          Stored only in this browser's local extension storage (not synced, not encrypted at rest) and sent only to
+          api.github.com.
+        </p>
+      </section>
+
+      <section>
+        <h2>What to count</h2>
+        <fieldset>
+          <legend>Scope</legend>
+          <label
+            ><input type="radio" name="scope" value="owner" /> Whole organisation (or account) that owns the PR</label
+          >
+          <label><input type="radio" name="scope" value="repo" /> Only the PR's repository</label>
+        </fieldset>
+        <label class="check">
+          <input type="checkbox" id="includeTeams" /> Include review requests made to a team the person belongs to
+        </label>
+        <p class="hint">
+          Counts open, non-draft pull requests where the person is requested and hasn't reviewed yet. The PR you're
+          looking at is left out. You only see PRs your token can see.
+        </p>
+      </section>
+
+      <section>
+        <h2>Display</h2>
+        <div class="thresholds">
+          <label>Amber from <input type="number" id="amber" min="1" max="99" /></label>
+          <label>Red from <input type="number" id="red" min="1" max="99" /></label>
+        </div>
+        <label class="check"><input type="checkbox" id="showHover" /> Show the list of waiting PRs on hover</label>
+        <label class="check">
+          <input type="checkbox" id="demo" /> Demo mode: show labelled sample numbers, no token needed
+        </label>
+      </section>
+      <p id="saved" role="status" aria-live="polite"></p>
+    </main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>
