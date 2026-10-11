@@ -4,11 +4,12 @@
 
 <h1 align="center">ReviewLoad</h1>
 
+<!-- Badges are local SVGs (GitHub's image proxy times out on shields.io). Bump docs/badges/release.svg when tagging a release. -->
 <p align="center">
-  <a href="https://github.com/CharlieGroves/review-load/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/CharlieGroves/review-load/ci.yml?branch=main&label=CI" alt="CI"></a>
-  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="https://img.shields.io/github/v/release/CharlieGroves/review-load" alt="Latest release"></a>
-  <img src="https://img.shields.io/badge/Chrome%20%C2%B7%20Firefox%20%C2%B7%20Edge-supported-2da44e" alt="Chrome, Firefox and Edge">
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/CharlieGroves/review-load" alt="MIT licence"></a>
+  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="docs/badges/release.svg" alt="Release v0.1.0"></a>
+  <img src="docs/badges/browsers.svg" alt="Chrome, Firefox and Edge">
+  <a href="PRIVACY.md"><img src="docs/badges/tracking.svg" alt="No tracking"></a>
+  <a href="LICENSE"><img src="docs/badges/licence.svg" alt="MIT licence"></a>
 </p>
 
 <p align="center"><b>See how many reviews each teammate is already waiting on, right in GitHub's Reviewers menu, before you add one more.</b></p>
