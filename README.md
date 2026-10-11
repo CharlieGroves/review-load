@@ -6,7 +6,7 @@
 
 <!-- Badges are local SVGs (GitHub's image proxy times out on shields.io). Bump docs/badges/release.svg when tagging a release. -->
 <p align="center">
-  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="docs/badges/release.svg" alt="Release v0.1.0"></a>
+  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="docs/badges/release.svg" alt="Release v0.2.0"></a>
   <img src="docs/badges/browsers.svg" alt="Chrome, Firefox and Edge">
   <a href="PRIVACY.md"><img src="docs/badges/tracking.svg" alt="No tracking"></a>
   <a href="LICENSE"><img src="docs/badges/licence.svg" alt="MIT licence"></a>

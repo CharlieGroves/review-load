@@ -18,4 +18,8 @@ export default defineConfig({
       },
     }),
   }),
+  zip: {
+    // README images and video; not needed to rebuild the extension.
+    excludeSources: ['docs/**'],
+  },
 });
