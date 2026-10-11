@@ -9,7 +9,7 @@ export function pageContext(pathname: string): PageContext | undefined {
 
 export interface Slot {
   login: string;
-  /** Element the pill is appended to (picker) or inserted after (sidebar). */
+  /** Element the pill is appended to, or inserted after. */
   anchor: Element;
   where: 'append' | 'after';
 }
@@ -23,9 +23,10 @@ export function findSlots(root: ParentNode): { picker: Slot[]; sidebar: Slot[] }
 
   for (const row of menu.querySelectorAll(s.pickerRow)) {
     if (!row.querySelector(s.pickerUserInput)) continue; // a team
-    const login = row.querySelector(s.pickerLogin)?.textContent?.trim();
-    const anchor = row.querySelector(s.pickerSlot);
-    if (login && anchor) picker.push({ login, anchor, where: 'append' });
+    // Right after the login, so a long full name never pushes the pill onto its own line.
+    const anchor = row.querySelector(s.pickerLogin);
+    const login = anchor?.textContent?.trim();
+    if (login && anchor) picker.push({ login, anchor, where: 'after' });
   }
   for (const el of item.querySelectorAll(s.sidebarUser)) {
     if (el.closest(s.pickerMenu)) continue;

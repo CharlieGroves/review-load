@@ -18,7 +18,7 @@ export default defineBackground(() => {
     if (tabId === undefined) return;
     const push = (m: Omit<LoadsMessage, 'type'>) =>
       browser.tabs.sendMessage(tabId, { type: 'loads', ...m } satisfies LoadsMessage).catch(() => {});
-    void handle(msg, push);
+    handle(msg, push).catch((e) => push({ loads: {}, error: { kind: 'network', message: String(e) } }));
   });
 
   async function handle(msg: Extract<Request, { type: 'getLoads' }>, push: (m: Omit<LoadsMessage, 'type'>) => unknown) {

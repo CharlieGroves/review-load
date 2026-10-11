@@ -3,7 +3,17 @@ import type { LoadError, PrSummary, Settings } from './types';
 
 export type PillState =
   | { kind: 'loading' }
-  | { kind: 'count'; n: number; prs: PrSummary[]; stale: boolean; fetchedAt: number; demo: boolean; error?: LoadError }
+  | {
+      kind: 'count';
+      n: number;
+      prs: PrSummary[];
+      stale: boolean;
+      fetchedAt: number;
+      demo: boolean;
+      /** GitHub search listing every PR behind the number. */
+      allUrl?: string;
+      error?: LoadError;
+    }
   | { kind: 'error'; error: LoadError };
 
 export const HOST_ATTR = 'data-reviewload';
@@ -105,6 +115,7 @@ a { color: var(--fgColor-accent, #0969da); text-decoration: none; overflow: hidd
 a:hover { text-decoration: underline; }
 .repo, .meta, .age { color: var(--fgColor-muted, #59636e); }
 .repo { grid-column: 1 / -1; font-size: 11px; }
+.all { display: block; margin-top: 4px; }
 .meta { margin-top: 6px; font-size: 11px; }
 button { font: inherit; margin-top: 6px; cursor: pointer; }
 `;
@@ -183,6 +194,11 @@ function content(login: string, state: PillState, now: number, openOptions: () =
       ol.append(li);
     }
     nodes.push(ol);
+  }
+  if (state.allUrl && state.n > state.prs.length) {
+    const all = el('a', 'all', `See all ${state.n} on GitHub`);
+    all.href = state.allUrl;
+    nodes.push(all);
   }
   const meta = state.demo
     ? 'Demo data: turn off demo mode in ReviewLoad options.'

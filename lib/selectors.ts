@@ -11,9 +11,8 @@ export const selectors = {
   pickerRow: '[role="menuitemcheckbox"]',
   /** Present on people, absent on teams (which use reviewer_team_ids[]). */
   pickerUserInput: 'input[name="reviewer_user_ids[]"]',
+  /** The login; the pill goes right after it. */
   pickerLogin: '.js-username',
-  /** Where the pill goes inside a picker row. */
-  pickerSlot: '.select-menu-item-heading',
   /** A requested or past reviewer listed in the sidebar. */
   sidebarUser: '[data-hovercard-url^="/users/"]',
   pickerMenu: 'details-menu',

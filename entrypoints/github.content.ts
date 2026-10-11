@@ -1,7 +1,7 @@
 import { demoLoad } from '@/lib/demo';
 import { findSlots, pageContext } from '@/lib/page';
 import { ensureHost, Popover, renderPill, type PillState } from '@/lib/pill';
-import { displayCount } from '@/lib/query';
+import { displayCount, scopeQualifier, searchString } from '@/lib/query';
 import { getSettings, settingsItem } from '@/lib/settings';
 import type { Load, LoadError, LoadsMessage, PageContext, PrSnapshot, Request, Settings } from '@/lib/types';
 
@@ -71,8 +71,18 @@ export default defineContentScript({
         stale: load.stale,
         fetchedAt: load.fetchedAt,
         demo: false,
+        allUrl: page && searchUrl(login, page),
         error: error?.kind === 'rate-limited' ? error : undefined,
       };
+    }
+
+    function searchUrl(login: string, ctx: PageContext): string | undefined {
+      try {
+        const q = searchString(login, scopeQualifier(ctx, settings.scope), settings.includeTeams);
+        return `https://github.com/search?type=pullrequests&q=${encodeURIComponent(q)}`;
+      } catch {
+        return undefined;
+      }
     }
 
     function scan() {
@@ -115,9 +125,13 @@ export default defineContentScript({
       sidebarSeen = sidebarNow;
     }
 
-    let frame = 0;
+    // setTimeout, not requestAnimationFrame: rAF never fires in background tabs, so pills there would stay on "…".
+    let timer: ReturnType<typeof setTimeout> | undefined;
     const schedule = () => {
-      if (!frame) frame = requestAnimationFrame(() => ((frame = 0), scan()));
+      timer ??= setTimeout(() => {
+        timer = undefined;
+        scan();
+      }, 16);
     };
 
     browser.runtime.onMessage.addListener((msg: LoadsMessage) => {

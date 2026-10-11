@@ -32,7 +32,7 @@ describe('findSlots on the PR sidebar fixture', () => {
   it('finds people in the picker, including filtered-out rows, and skips teams', () => {
     const { picker } = findSlots(document);
     expect(picker.map((s) => s.login)).toEqual(['alice-example', 'bob-example', 'carol-example']);
-    expect(picker.every((s) => s.anchor.classList.contains('select-menu-item-heading'))).toBe(true);
+    expect(picker.every((s) => s.anchor.classList.contains('js-username') && s.where === 'after')).toBe(true);
   });
 
   it('finds requested reviewers in the sidebar but not elsewhere on the page', () => {
