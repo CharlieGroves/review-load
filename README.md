@@ -1,8 +1,27 @@
-# ReviewLoad
+<p align="center">
+  <img src="assets/icon.svg" alt="ReviewLoad logo" width="112">
+</p>
 
-See how many reviews each teammate is already waiting on, right in GitHub's **Reviewers** menu, before you add one more.
+<h1 align="center">ReviewLoad</h1>
 
-![ReviewLoad pills in GitHub's reviewer picker](docs/screenshot.png)
+<p align="center">
+  <a href="https://github.com/CharlieGroves/review-load/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/CharlieGroves/review-load/ci.yml?branch=main&label=CI" alt="CI"></a>
+  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="https://img.shields.io/github/v/release/CharlieGroves/review-load" alt="Latest release"></a>
+  <img src="https://img.shields.io/badge/Chrome%20%C2%B7%20Firefox%20%C2%B7%20Edge-supported-2da44e" alt="Chrome, Firefox and Edge">
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/CharlieGroves/review-load" alt="MIT licence"></a>
+</p>
+
+<p align="center"><b>See how many reviews each teammate is already waiting on, right in GitHub's Reviewers menu, before you add one more.</b></p>
+
+<p align="center">
+  <a href="docs/demo.mp4">
+    <img src="docs/demo.gif" alt="Demo: on a pull request, the Reviewers menu opens and a coloured count appears next to each person. The suggested reviewer, sam-okafor, shows a red 9; hovering it lists their nine waiting reviews, the oldest 12 days old. The user picks leo-fischer, who has 1, instead." width="800">
+  </a>
+  <br>
+  <sub>▶️ <a href="docs/demo.mp4">Watch in full resolution</a> · names and numbers are illustrative</sub>
+</p>
+
+---
 
 Open the Reviewers gear on any pull request and each person gets a small pill:
 
@@ -13,6 +32,12 @@ Open the Reviewers gear on any pull request and each person gets a small pill:
 The same pill appears next to reviewers already on the PR, so you can tell when the person you just added is snowed under.
 
 ReviewLoad only adds information. It never requests reviews, assigns anyone, or changes anything on GitHub.
+
+<p align="center">
+  <img src="docs/screenshot.png" alt="ReviewLoad on a real GitHub pull request: counts next to each person in the Reviewers menu, and the hover card listing one person's waiting reviews" width="800">
+  <br>
+  <sub>On a real pull request (names, avatars and numbers changed)</sub>
+</p>
 
 ## Install
 
@@ -90,6 +115,7 @@ npm test           # unit and DOM-fixture tests
 npm run compile    # type-check
 npm run build && npm run build:firefox
 npm run zip && npm run zip:firefox   # store-ready zips (Firefox also gets a sources zip)
+npm run demo       # re-render docs/demo.mp4 and docs/demo.gif from assets/video/demo.html (needs ffmpeg)
 ```
 
 Every GitHub selector lives in [`lib/selectors.ts`](lib/selectors.ts), and [`fixtures/pr-sidebar.html`](fixtures/pr-sidebar.html) mirrors the markup it expects. When GitHub changes the picker, those two files are usually the whole fix.

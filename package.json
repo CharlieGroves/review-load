@@ -16,11 +16,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "demo": "node scripts/render-demo.mjs"
   },
   "devDependencies": {
     "happy-dom": "^20.14.6",
     "msw": "^2.15.0",
+    "playwright": "^1.64.0",
     "prettier": "^3.9.10",
     "typescript": "^5.9.3",
     "vite": "^8.1.5",

@@ -1,0 +1,724 @@
+<!doctype html>
+<!--
+  The README demo. Deterministic: window.render(t) draws the frame at t seconds,
+  so scripts/render-demo.mjs can capture it frame by frame. Open it in a browser
+  to preview; it plays on a loop.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>ReviewLoad demo</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --bg-inset: #010409;
+        --overlay: #151b23;
+        --border: #3d444d;
+        --border-muted: #2a313c;
+        --fg: #f0f6fc;
+        --muted: #9198a1;
+        --accent: #4493f8;
+        --green: #1f883d;
+        --amber: #d4a72c;
+        --red: #cf222e;
+        --select: #1f6feb;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        background: var(--bg);
+      }
+      body {
+        font:
+          14px/1.5 -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          'Noto Sans',
+          Helvetica,
+          Arial,
+          sans-serif;
+        color: var(--fg);
+      }
+      #stage {
+        position: relative;
+        width: 1280px;
+        height: 720px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      .abs {
+        position: absolute;
+      }
+
+      /* Page chrome */
+      .topbar {
+        left: 0;
+        top: 0;
+        width: 1280px;
+        height: 64px;
+        background: var(--bg-inset);
+        border-bottom: 1px solid var(--border-muted);
+      }
+      .octo {
+        left: 24px;
+        top: 18px;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: #2f3742;
+      }
+      .crumbs {
+        left: 72px;
+        top: 19px;
+        font-size: 16px;
+        color: var(--fg);
+      }
+      .crumbs b {
+        font-weight: 600;
+      }
+      .crumbs span {
+        color: var(--muted);
+        margin: 0 6px;
+      }
+      .title {
+        left: 48px;
+        top: 92px;
+        font-size: 32px;
+        font-weight: 400;
+        letter-spacing: -0.2px;
+      }
+      .title span {
+        color: var(--muted);
+        font-weight: 300;
+      }
+      .meta {
+        left: 48px;
+        top: 146px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      .open {
+        background: #238636;
+        color: #fff;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-weight: 600;
+      }
+      .meta b {
+        color: var(--fg);
+        font-weight: 600;
+      }
+      .branch {
+        font:
+          12px ui-monospace,
+          SFMono-Regular,
+          Menlo,
+          monospace;
+        color: var(--accent);
+        background: rgba(56, 139, 253, 0.15);
+        padding: 2px 6px;
+        border-radius: 6px;
+      }
+      .tabs {
+        left: 48px;
+        top: 196px;
+        width: 1184px;
+        height: 48px;
+        border-bottom: 1px solid var(--border-muted);
+        display: flex;
+        gap: 28px;
+        align-items: center;
+        color: var(--muted);
+      }
+      .tabs .on {
+        color: var(--fg);
+        font-weight: 600;
+        border-bottom: 2px solid #f78166;
+        padding-bottom: 12px;
+        margin-top: 14px;
+      }
+      .count {
+        background: #2f3742;
+        color: var(--fg);
+        border-radius: 999px;
+        padding: 0 7px;
+        font-size: 12px;
+        margin-left: 4px;
+      }
+
+      /* Conversation placeholder */
+      .comment {
+        left: 48px;
+        top: 272px;
+        width: 780px;
+        height: 300px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .comment-head {
+        height: 44px;
+        background: #161b22;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 8px;
+        color: var(--muted);
+      }
+      .comment-head b {
+        color: var(--fg);
+      }
+      .line {
+        height: 12px;
+        border-radius: 6px;
+        background: #21262d;
+        margin: 18px 16px 0;
+      }
+
+      /* Sidebar */
+      .side-h {
+        left: 880px;
+        top: 268px;
+        width: 352px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .gear {
+        width: 18px;
+        height: 18px;
+      }
+      .side-empty {
+        left: 880px;
+        top: 298px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+      .side-row {
+        left: 880px;
+        top: 296px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        font-size: 14px;
+      }
+      .side-rule {
+        left: 880px;
+        width: 352px;
+        height: 1px;
+        background: var(--border-muted);
+      }
+
+      /* Avatar + pill */
+      .av {
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 9px;
+        font-weight: 700;
+        color: #fff;
+        flex: none;
+      }
+      .pill {
+        display: inline-block;
+        min-width: 20px;
+        padding: 0 7px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 700;
+        line-height: 19px;
+        text-align: center;
+        color: #fff;
+        transform-origin: center;
+      }
+      .pill.green {
+        background: var(--green);
+      }
+      .pill.amber {
+        background: var(--amber);
+        color: #1f2328;
+      }
+      .pill.red {
+        background: var(--red);
+      }
+
+      /* Picker */
+      .picker {
+        left: 872px;
+        top: 290px;
+        width: 360px;
+        background: var(--overlay);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+        overflow: hidden;
+        transform-origin: top right;
+      }
+      .picker-h {
+        padding: 12px 16px;
+        font-weight: 600;
+        font-size: 13px;
+        border-bottom: 1px solid var(--border-muted);
+      }
+      .search {
+        margin: 10px 12px;
+        height: 34px;
+        border: 2px solid var(--accent);
+        border-radius: 6px;
+        padding: 5px 10px;
+        color: var(--muted);
+      }
+      .group {
+        padding: 6px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--fg);
+        background: #1c232c;
+        border-top: 1px solid var(--border-muted);
+        border-bottom: 1px solid var(--border-muted);
+      }
+      .row {
+        height: 37px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 0 16px 0 34px;
+        position: relative;
+        border-bottom: 1px solid var(--border-muted);
+      }
+      .row .login {
+        font-weight: 600;
+      }
+      .row .name {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .row .check {
+        position: absolute;
+        left: 12px;
+        color: var(--fg);
+        font-size: 14px;
+      }
+      .row.sel {
+        background: var(--select);
+      }
+      .row.sel .name {
+        color: #e6edf3;
+      }
+
+      /* Hover card */
+      .card {
+        left: 520px;
+        top: 300px;
+        width: 336px;
+        background: var(--bg-inset);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 12px 14px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+      }
+      .card .t {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 6px;
+      }
+      .card li {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        padding: 4px 0;
+        border-top: 1px solid var(--border-muted);
+      }
+      .card ol {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+      .card a {
+        color: var(--accent);
+        font-size: 13px;
+      }
+      .card .age {
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .card .repo {
+        color: var(--muted);
+        font-size: 11px;
+        grid-column: 1 / -1;
+      }
+      .card .all {
+        display: block;
+        margin-top: 8px;
+        font-size: 13px;
+        color: var(--accent);
+      }
+
+      /* Caption */
+      .caption {
+        left: 48px;
+        width: 780px;
+        top: 618px;
+        display: flex;
+        justify-content: center;
+      }
+      .caption div {
+        background: rgba(1, 4, 9, 0.88);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 12px 26px;
+        font-size: 22px;
+        font-weight: 600;
+        letter-spacing: -0.1px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+      .caption em {
+        font-style: normal;
+        color: #ff7b72;
+      }
+      .caption i {
+        font-style: normal;
+        color: #3fb950;
+      }
+
+      /* Cursor + click ripple */
+      .cursor {
+        left: 0;
+        top: 0;
+        width: 26px;
+        height: 32px;
+        filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.6));
+      }
+      .ripple {
+        width: 44px;
+        height: 44px;
+        margin: -22px 0 0 -22px;
+        border-radius: 50%;
+        border: 3px solid rgba(68, 147, 248, 0.9);
+      }
+
+      /* End card */
+      .end {
+        inset: 0;
+        background: radial-gradient(ellipse at 50% 40%, #161b22 0%, var(--bg) 70%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 18px;
+      }
+      .end h1 {
+        margin: 0;
+        font-size: 64px;
+        letter-spacing: -1.5px;
+      }
+      .end p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 24px;
+      }
+      .end .chips {
+        display: flex;
+        gap: 12px;
+        margin-top: 8px;
+      }
+      .end .chips span {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 6px 16px;
+        color: var(--fg);
+        font-size: 16px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="stage">
+      <div class="abs topbar"></div>
+      <div class="abs octo"></div>
+      <div class="abs crumbs">acme<span>/</span><b>platform</b></div>
+      <div class="abs title">Add retry with backoff to webhook delivery <span>#482</span></div>
+      <div class="abs meta">
+        <span class="open">Open</span><b>maya-chen</b> wants to merge 3 commits into
+        <span class="branch">main</span> from <span class="branch">maya/webhook-retry</span>
+      </div>
+      <div class="abs tabs">
+        <span class="on">Conversation <span class="count">2</span></span
+        ><span>Commits <span class="count">3</span></span
+        ><span>Checks <span class="count">12</span></span
+        ><span>Files changed <span class="count">5</span></span>
+      </div>
+      <div class="abs comment">
+        <div class="comment-head">
+          <span class="av" style="background: #8250df">MC</span><b>maya-chen</b> commented now
+        </div>
+        <div class="line" style="width: 62%"></div>
+        <div class="line" style="width: 88%"></div>
+        <div class="line" style="width: 80%"></div>
+        <div class="line" style="width: 45%"></div>
+        <div class="line" style="width: 70%; margin-top: 34px"></div>
+        <div class="line" style="width: 84%"></div>
+        <div class="line" style="width: 58%"></div>
+      </div>
+
+      <div class="abs side-h">
+        Reviewers
+        <svg id="gear" class="gear" viewBox="0 0 16 16" fill="#9198a1">
+          <path
+            d="M8 0a8.2 8.2 0 0 1 .701.031C9.444.095 9.99.645 10.16 1.29l.288 1.107c.018.066.079.158.212.224.231.114.454.243.668.386.123.082.233.09.299.071l1.103-.303c.644-.176 1.392.021 1.82.63.27.385.506.792.704 1.218.315.675.111 1.422-.364 1.891l-.814.806c-.049.048-.098.147-.088.294.016.257.016.515 0 .772-.01.147.038.246.088.294l.814.806c.475.469.679 1.216.364 1.891a7.977 7.977 0 0 1-.704 1.217c-.428.61-1.176.807-1.82.63l-1.102-.302c-.067-.019-.177-.011-.3.071a5.909 5.909 0 0 1-.668.386c-.133.066-.194.158-.211.224l-.29 1.106c-.168.646-.715 1.196-1.458 1.26a8.006 8.006 0 0 1-1.402 0c-.743-.064-1.289-.614-1.458-1.26l-.289-1.106c-.018-.066-.079-.158-.212-.224a5.738 5.738 0 0 1-.668-.386c-.123-.082-.233-.09-.299-.071l-1.103.303c-.644.176-1.392-.021-1.82-.63a8.12 8.12 0 0 1-.704-1.218c-.315-.675-.111-1.422.363-1.891l.815-.806c.05-.048.098-.147.088-.294a6.214 6.214 0 0 1 0-.772c.01-.147-.038-.246-.088-.294l-.815-.806C.635 6.045.431 5.298.746 4.623a7.92 7.92 0 0 1 .704-1.217c.428-.61 1.176-.807 1.82-.63l1.102.302c.067.019.177.011.3-.071.214-.143.437-.272.668-.386.133-.066.194-.158.211-.224l.29-1.106C6.009.645 6.556.095 7.299.03 7.53.01 7.764 0 8 0Zm-.571 1.525c-.036.003-.108.036-.137.146l-.289 1.105c-.147.561-.549.967-.998 1.189-.173.086-.34.183-.5.29-.417.278-.97.423-1.529.27l-1.103-.303c-.109-.03-.175.016-.195.045-.22.312-.412.644-.573.99-.014.031-.021.11.059.19l.815.806c.411.406.562.957.53 1.456a4.709 4.709 0 0 0 0 .582c.032.499-.119 1.05-.53 1.456l-.815.806c-.081.08-.073.159-.059.19.162.346.353.677.573.989.02.03.085.076.195.046l1.102-.303c.56-.153 1.113-.008 1.53.27.161.107.328.204.501.29.447.222.85.629.997 1.189l.289 1.105c.029.109.101.143.137.146a6.6 6.6 0 0 0 1.142 0c.036-.003.108-.036.137-.146l.289-1.105c.147-.561.549-.967.998-1.189.173-.086.34-.183.5-.29.417-.278.97-.423 1.529-.27l1.103.303c.109.029.175-.016.195-.045.22-.313.411-.644.573-.99.014-.031.021-.11-.059-.19l-.815-.806c-.411-.406-.562-.957-.53-1.456a4.709 4.709 0 0 0 0-.582c-.032-.499.119-1.05.53-1.456l.815-.806c.081-.08.073-.159.059-.19a6.464 6.464 0 0 0-.573-.989c-.02-.03-.085-.076-.195-.046l-1.102.303c-.56.153-1.113.008-1.53-.27a4.44 4.44 0 0 0-.501-.29c-.447-.222-.85-.629-.997-1.189l-.289-1.105c-.029-.11-.101-.143-.137-.146a6.6 6.6 0 0 0-1.142 0ZM11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM9.5 8a1.5 1.5 0 1 0-3.001.001A1.5 1.5 0 0 0 9.5 8Z"
+          />
+        </svg>
+      </div>
+      <div id="sideEmpty" class="abs side-empty">No reviews requested yet</div>
+      <div id="sideRow" class="abs side-row">
+        <span class="av" style="background: #1a7f37">LF</span>leo-fischer <span class="pill green">1</span>
+      </div>
+      <div class="abs side-rule" style="top: 340px"></div>
+      <div class="abs side-h" style="top: 356px">Assignees</div>
+      <div class="abs side-empty" style="top: 384px">No one assigned</div>
+      <div class="abs side-rule" style="top: 424px"></div>
+      <div class="abs side-h" style="top: 440px">Labels</div>
+      <div class="abs side-empty" style="top: 468px">None yet</div>
+
+      <div id="picker" class="abs picker">
+        <div class="picker-h">Request up to 100 reviewers</div>
+        <div class="search">Find a user</div>
+        <div class="group">Suggestions</div>
+        <div id="rows"></div>
+      </div>
+
+      <div id="card" class="abs card">
+        <div class="t">sam-okafor: 9 pending review requests</div>
+        <ol id="queue"></ol>
+        <span class="all">See all 9 on GitHub</span>
+      </div>
+
+      <div id="caption" class="abs caption"><div></div></div>
+      <div id="ripple" class="abs ripple"></div>
+      <svg id="cursor" class="abs cursor" viewBox="0 0 26 32">
+        <path
+          d="M2 2 L2 25 L8 19.5 L12.5 29 L16.5 27.2 L12 18 L20 18 Z"
+          fill="#fff"
+          stroke="#000"
+          stroke-width="1.6"
+          stroke-linejoin="round"
+        />
+      </svg>
+
+      <div id="end" class="abs end">
+        <svg width="112" height="112" viewBox="0 0 128 128">
+          <rect width="128" height="128" rx="28" fill="#1f2328" stroke="#3d444d" stroke-width="2" />
+          <rect x="22" y="26" width="44" height="18" rx="9" fill="#2da44e" />
+          <rect x="22" y="55" width="64" height="18" rx="9" fill="#d4a72c" />
+          <rect x="22" y="84" width="84" height="18" rx="9" fill="#e5534b" />
+        </svg>
+        <h1>ReviewLoad</h1>
+        <p>See review load right in GitHub's reviewer picker</p>
+        <div class="chips">
+          <span>Free and open source</span><span>No server</span><span>Chrome · Firefox · Edge</span>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const PEOPLE = [
+        { login: 'sam-okafor', name: 'Sam Okafor', n: 9, colour: '#bf3989', suggestion: true },
+        { login: 'ana-souza', name: 'Ana Souza', n: 6, colour: '#9a6700' },
+        { login: 'ines-moreau', name: 'Ines Moreau', n: 2, colour: '#6639ba' },
+        { login: 'kofi-mensah', name: 'Kofi Mensah', n: 3, colour: '#0550ae' },
+        { login: 'leo-fischer', name: 'Leo Fischer', n: 1, colour: '#1a7f37' },
+        { login: 'priya-raman', name: 'Priya Raman', n: 4, colour: '#0969da' },
+      ];
+      const QUEUE = [
+        ['Move session store to Redis', 'acme/platform', '12d'],
+        ['Fix race in invoice retries', 'acme/billing', '9d'],
+        ['Add audit log export', 'acme/web', '6d'],
+        ['Upgrade to Postgres 17', 'acme/platform', '4d'],
+        ['Rate-limit public API keys', 'acme/api', '2d'],
+      ];
+      const CAPTIONS = [
+        [0.3, 3.0, 'Who should review this?'],
+        [3.0, 4.6, 'ReviewLoad shows the reviews each person is <em>already waiting on</em>'],
+        [4.6, 7.2, 'Hover to see their queue, oldest first'],
+        [7.2, 9.6, 'So you can pick someone <i>with room</i>'],
+      ];
+      const DURATION = 12.5;
+      const PILLS_AT = 3.1;
+      const level = (n) => (n >= 6 ? 'red' : n >= 3 ? 'amber' : 'green');
+      const initials = (name) =>
+        name
+          .split(' ')
+          .map((w) => w[0])
+          .join('');
+
+      const $ = (id) => document.getElementById(id);
+      const rows = $('rows');
+      PEOPLE.forEach((p, i) => {
+        if (i === 1) rows.insertAdjacentHTML('beforeend', '<div class="group">Everyone else</div>');
+        rows.insertAdjacentHTML(
+          'beforeend',
+          `<div class="row" data-login="${p.login}"><span class="check"></span><span class="av" style="background:${p.colour}">${initials(p.name)}</span>` +
+            `<span class="login">${p.login}</span><span class="pill ${level(p.n)}">${p.n}</span><span class="name">${p.name}</span></div>`,
+        );
+      });
+      $('queue').innerHTML = QUEUE.map(
+        ([t, r, a]) => `<li><a>${t}</a><span class="age">${a}</span><span class="repo">${r}</span></li>`,
+      ).join('');
+
+      const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+      const seg = (t, a, b) => clamp((t - a) / (b - a));
+      const easeInOut = (x) => (x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
+      const easeOut = (x) => 1 - Math.pow(1 - x, 3);
+      const backOut = (x) => 1 + 2.4 * Math.pow(x - 1, 3) + 1.4 * Math.pow(x - 1, 2);
+      const lerp = (a, b, x) => a + (b - a) * x;
+
+      const row = (login) => rows.querySelector(`[data-login="${login}"]`);
+      const pill = (login) => row(login).querySelector('.pill');
+
+      // Positions measured once, with the picker laid out at rest, so the cursor lands on real elements.
+      let points;
+      function measure() {
+        const stage = $('stage').getBoundingClientRect();
+        const centre = (el) => {
+          const r = el.getBoundingClientRect();
+          return [r.left - stage.left + r.width / 2, r.top - stage.top + r.height / 2];
+        };
+        points = {
+          start: [520, 520],
+          gear: centre($('gear')),
+          samRow: (([x, y]) => [x - 40, y])(centre(row('sam-okafor').querySelector('.login'))),
+          samPill: (([x, y]) => [x + 9, y + 6])(centre(pill('sam-okafor'))), // tip on the pill's edge, number visible
+          leoRow: (([x, y]) => [x + 10, y])(centre(row('leo-fischer').querySelector('.name'))),
+          rest: [700, 520],
+        };
+      }
+
+      // [time, point, ease] keyframes for the cursor.
+      const PATH = () => [
+        [0.0, points.start],
+        [0.4, points.start],
+        [1.5, points.gear],
+        [2.0, points.gear],
+        [2.9, points.samRow],
+        [3.9, points.samRow],
+        [4.5, points.samPill],
+        [7.2, points.samPill],
+        [8.1, points.leoRow],
+        [9.0, points.leoRow],
+        [9.8, points.rest],
+      ];
+      const CLICKS = [1.55, 8.2];
+
+      function cursorAt(t) {
+        const path = PATH();
+        for (let i = 1; i < path.length; i++) {
+          const [t0, p0] = path[i - 1];
+          const [t1, p1] = path[i];
+          if (t <= t1) {
+            const x = easeInOut(seg(t, t0, t1));
+            return [lerp(p0[0], p1[0], x), lerp(p0[1], p1[1], x)];
+          }
+        }
+        return path[path.length - 1][1];
+      }
+
+      function render(t) {
+        // Picker opens on the first click, closes after the second.
+        const open = easeOut(seg(t, 1.6, 1.85)) * (1 - seg(t, 8.55, 8.75));
+        const picker = $('picker');
+        picker.style.opacity = open;
+        picker.style.transform = `scale(${0.96 + 0.04 * open})`;
+
+        // Pills pop in one after another.
+        PEOPLE.forEach((p, i) => {
+          const x = seg(t, PILLS_AT + i * 0.1, PILLS_AT + i * 0.1 + 0.35);
+          const el = pill(p.login);
+          el.style.opacity = clamp(x * 3);
+          el.style.transform = `scale(${x === 0 ? 0 : backOut(x)})`;
+        });
+
+        // Hovered / selected rows.
+        const hoverSam = t > 2.9 && t < 7.4;
+        const hoverLeo = t > 8.0;
+        row('sam-okafor').classList.toggle('sel', hoverSam);
+        row('leo-fischer').classList.toggle('sel', hoverLeo);
+        row('leo-fischer').querySelector('.check').textContent = t > 8.25 ? '✓' : '';
+
+        // Hover card slides out beside the picker.
+        const card = easeOut(seg(t, 4.6, 4.9)) * (1 - seg(t, 7.2, 7.4));
+        $('card').style.opacity = card;
+        $('card').style.transform = `translateX(${(1 - card) * 16}px)`;
+
+        // Sidebar: empty, then Leo with their pill.
+        const picked = easeOut(seg(t, 8.75, 9.05));
+        $('sideEmpty').style.opacity = 1 - picked;
+        $('sideRow').style.opacity = picked;
+
+        // Caption cross-fades.
+        const cap = CAPTIONS.find(([a, b]) => t >= a && t < b);
+        const capEl = $('caption').firstElementChild;
+        if (cap) {
+          if (capEl.dataset.key !== cap[2]) {
+            capEl.innerHTML = cap[2];
+            capEl.dataset.key = cap[2];
+          }
+          const f = Math.min(seg(t, cap[0], cap[0] + 0.25), 1 - seg(t, cap[1] - 0.2, cap[1]));
+          $('caption').style.opacity = f;
+          $('caption').style.transform = `translateY(${(1 - f) * 10}px)`;
+        } else $('caption').style.opacity = 0;
+
+        // Cursor and click ripples.
+        const [cx, cy] = cursorAt(t);
+        const press = CLICKS.some((c) => t > c && t < c + 0.12);
+        $('cursor').style.transform = `translate(${cx - 2}px, ${cy - 2}px) scale(${press ? 0.88 : 1})`;
+        const click = CLICKS.find((c) => t >= c && t < c + 0.45);
+        const ripple = $('ripple');
+        if (click !== undefined) {
+          const x = seg(t, click, click + 0.45);
+          ripple.style.opacity = 1 - x;
+          ripple.style.transform = `translate(${cx}px, ${cy}px) scale(${0.3 + x})`;
+        } else ripple.style.opacity = 0;
+        $('cursor').style.opacity = 1 - seg(t, 9.8, 10.1);
+
+        // End card.
+        const end = easeInOut(seg(t, 10.0, 10.6));
+        $('end').style.opacity = end;
+        $('end').firstElementChild.style.transform = `scale(${0.9 + 0.1 * end})`;
+      }
+
+      window.DURATION = DURATION;
+      window.render = render;
+      window.ready = document.fonts.ready.then(() => {
+        // Measure with the picker at rest, then draw the first frame.
+        $('picker').style.opacity = 1;
+        $('picker').style.transform = 'none';
+        measure();
+        render(0);
+      });
+
+      // Preview: loop in real time when opened directly.
+      if (!navigator.webdriver) {
+        window.ready.then(() => {
+          const t0 = performance.now();
+          const tick = (now) => {
+            render(((now - t0) / 1000) % (DURATION + 1));
+            requestAnimationFrame(tick);
+          };
+          requestAnimationFrame(tick);
+        });
+      }
+    </script>
+  </body>
+</html>
