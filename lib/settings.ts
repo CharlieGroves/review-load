@@ -11,3 +11,9 @@ export const settingsItem = storage.defineItem<Settings>('local:settings', {
 export async function getSettings(): Promise<Settings> {
   return { ...defaultSettings, ...(await settingsItem.getValue()) };
 }
+
+export async function updateSettings(patch: Partial<Settings>): Promise<Settings> {
+  const next = { ...(await getSettings()), ...patch };
+  await settingsItem.setValue(next);
+  return next;
+}

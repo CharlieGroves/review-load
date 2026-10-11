@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ReviewLoad</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header>
+      <img src="/icon/48.png" alt="" width="24" height="24" />
+      <h1>ReviewLoad</h1>
+    </header>
+
+    <section id="connected" hidden>
+      <div class="status-row">
+        <span class="dot" aria-hidden="true"></span>
+        <p id="who" role="status"></p>
+        <button type="button" id="change" class="link">Change</button>
+      </div>
+    </section>
+
+    <section id="setup" hidden>
+      <p id="setup-intro">Add a read-only GitHub token to see review load.</p>
+      <a id="create-token" class="button secondary" target="_blank" rel="noopener">1. Create a token on GitHub ↗</a>
+      <form id="token-form">
+        <label for="token">2. Paste it here</label>
+        <div class="row">
+          <input id="token" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_…" />
+          <button type="submit">Save</button>
+        </div>
+      </form>
+      <p id="token-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="settings">
+      <div class="field">
+        <span class="label" id="scope-label">Count reviews across</span>
+        <div class="segmented" role="radiogroup" aria-labelledby="scope-label">
+          <label><input type="radio" name="scope" value="owner" /><span>Organisation</span></label>
+          <label><input type="radio" name="scope" value="repo" /><span>Repository</span></label>
+        </div>
+      </div>
+      <label class="toggle">
+        <span>Include team requests</span>
+        <input type="checkbox" id="includeTeams" role="switch" />
+      </label>
+      <label class="toggle">
+        <span>Demo mode <small>sample numbers, no token</small></span>
+        <input type="checkbox" id="demo" role="switch" />
+      </label>
+    </section>
+
+    <footer>
+      <button type="button" id="all-settings" class="link">All settings</button>
+      <a href="https://github.com/CharlieGroves/review-load#readme" target="_blank" rel="noopener">Help</a>
+    </footer>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

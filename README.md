@@ -46,7 +46,7 @@ ReviewLoad only adds information. It never requests reviews, assigns anyone, or 
 - Firefox: _Firefox Add-ons link coming once the listing is approved_
 - From source: see [Development](#development)
 
-Want to see it before creating a token? Turn on **Demo mode** in the options: every pill shows clearly labelled sample numbers and nothing is sent anywhere.
+Want to see it before creating a token? Click the ReviewLoad icon in your toolbar and turn on **Demo mode**: every pill shows clearly labelled sample numbers and nothing is sent anywhere.
 
 ## Set up a token (two minutes)
 
@@ -55,7 +55,9 @@ ReviewLoad reads GitHub's search API with your own read-only token. There's no R
 1. Open **[this pre-filled token form](https://github.com/settings/personal-access-tokens/new?name=ReviewLoad&description=Read-only+token+for+the+ReviewLoad+browser+extension&expires_in=90&pull_requests=read)**. It already sets the name, a 90-day expiry, and **Pull requests: Read-only** (Metadata: Read is added automatically).
 2. Set **Resource owner** to your organisation and **Repository access** to **All repositories**.
 3. Click **Generate token** and copy it.
-4. Open ReviewLoad's options (right-click the toolbar icon → Options, or via your browser's extensions page), paste the token and click **Save and check**. You should see `✓ Token works for <you>`.
+4. Click the ReviewLoad icon in your toolbar, paste the token and click **Save**. You should see `Connected as <you>`.
+
+The same pop-up switches between organisation and repository scope, team requests and demo mode. Colour thresholds and removing the token live under **All settings**.
 
 Things that can get in the way:
 
