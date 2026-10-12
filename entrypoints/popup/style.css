@@ -249,3 +249,7 @@ footer {
 footer a {
   text-decoration: none;
 }
+footer .links {
+  display: flex;
+  gap: 14px;
+}
