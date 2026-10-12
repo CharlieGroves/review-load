@@ -55,6 +55,14 @@ export const defaultSettings: Settings = {
 export type Request =
   { type: 'getLoads'; logins: string[]; ctx: PageContext; force?: boolean } | { type: 'openOptions' };
 
+/** background -> content script: run a github.com/pulls search with the browser session (no token). */
+export interface WebSearchMessage {
+  type: 'webSearch';
+  query: string;
+}
+
+export type WebSearchReply = { ok: true; result: import('./web').WebSearchResult } | { ok: false; error: LoadError };
+
 /** background -> content script */
 export interface LoadsMessage {
   type: 'loads';

@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { fakeBrowser } from 'wxt/testing/fake-browser';
 import { GRAPHQL_URL } from '@/lib/github';
 import { tokenItem } from '@/lib/settings';
-import type { LoadsMessage } from '@/lib/types';
+import type { LoadsMessage, WebSearchMessage, WebSearchReply } from '@/lib/types';
 import background from '@/entrypoints/background';
 
 const server = setupServer(
@@ -29,11 +29,18 @@ afterAll(() => server.close());
 
 describe('background', () => {
   let sent: LoadsMessage[];
+  const searches: string[] = [];
+  let webReply: WebSearchReply;
 
   beforeEach(() => {
     fakeBrowser.reset();
     sent = [];
-    fakeBrowser.tabs.sendMessage = vi.fn(async (_tabId: number, msg: LoadsMessage) => {
+    webReply = { ok: true, result: { total: 3, items: [] } };
+    fakeBrowser.tabs.sendMessage = vi.fn(async (_tabId: number, msg: LoadsMessage | WebSearchMessage) => {
+      if (msg.type === 'webSearch') {
+        searches.push(msg.query);
+        return webReply;
+      }
       sent.push(msg);
     }) as never;
     background.main();
@@ -44,7 +51,15 @@ describe('background', () => {
     await vi.waitFor(() => expect(sent.length).toBeGreaterThan(0));
   };
 
-  it('tells the tab when there is no token', async () => {
+  it('without a token, asks the tab to search github.com/pulls', async () => {
+    searches.length = 0;
+    await ask({ type: 'getLoads', logins: ['alice'], ctx: { owner: 'acme', repo: 'web', pr: 7 } });
+    expect(searches[0]).toBe('is:pr is:open draft:false user-review-requested:alice user:acme sort:created-asc');
+    expect(sent[0]?.loads.alice).toMatchObject({ count: 3, stale: false });
+  });
+
+  it('without a token, reports a signed-out tab as no-token', async () => {
+    webReply = { ok: false, error: { kind: 'no-token' } };
     await ask({ type: 'getLoads', logins: ['alice'], ctx: { owner: 'acme', repo: 'web', pr: 7 } });
     expect(sent[0]).toEqual({ type: 'loads', loads: {}, error: { kind: 'no-token' } });
   });
