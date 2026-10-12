@@ -89,7 +89,7 @@ export function renderPill(host: HTMLElement, state: PillState, settings: Settin
 export function errorText(e: LoadError): string {
   switch (e.kind) {
     case 'no-token':
-      return 'Add a GitHub token in ReviewLoad options to see review load.';
+      return 'Add a GitHub token in ReviewLoad options to see review load. Signing in to GitHub works as a stopgap.';
     case 'unauthorized':
       return 'GitHub rejected the token. It may have expired or been revoked.';
     case 'sso':

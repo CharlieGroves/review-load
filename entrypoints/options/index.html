@@ -15,6 +15,11 @@
       <section>
         <h2>GitHub token</h2>
         <p>
+          Recommended. A token uses GitHub's documented API, five people per request. Without one, counts come from
+          GitHub's internal pull request dashboard through your signed-in session, which is slower and may break when
+          GitHub changes its site.
+        </p>
+        <p>
           Create a <strong>fine-grained token</strong> with read-only access: choose your organisation as the resource
           owner, <em>All repositories</em>, and <em>Pull requests: Read</em>. Set an expiry.
           <a id="create-token" target="_blank" rel="noopener">Create a token on GitHub ↗</a>

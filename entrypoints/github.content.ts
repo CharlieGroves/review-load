@@ -3,7 +3,19 @@ import { findSlots, pageContext } from '@/lib/page';
 import { ensureHost, Popover, renderPill, type PillState } from '@/lib/pill';
 import { displayCount, scopeQualifier, searchString } from '@/lib/query';
 import { getSettings, settingsItem } from '@/lib/settings';
-import type { Load, LoadError, LoadsMessage, PageContext, PrSnapshot, Request, Settings } from '@/lib/types';
+import { toLoadError } from '@/lib/github';
+import type {
+  Load,
+  LoadError,
+  LoadsMessage,
+  PageContext,
+  PrSnapshot,
+  Request,
+  Settings,
+  WebSearchMessage,
+  WebSearchReply,
+} from '@/lib/types';
+import { webSearch } from '@/lib/web';
 
 const REQUEST_DEBOUNCE_MS = 150;
 /** Search indexing lags a reviewer being added; wait before re-asking. */
@@ -133,6 +145,16 @@ export default defineContentScript({
         scan();
       }, 16);
     };
+
+    // Token-less fallback: the background asks this tab to search, since only github.com pages carry the session.
+    browser.runtime.onMessage.addListener((msg: WebSearchMessage, _sender, sendResponse) => {
+      if (msg?.type !== 'webSearch') return;
+      webSearch(msg.query).then(
+        (result) => sendResponse({ ok: true, result } satisfies WebSearchReply),
+        (e) => sendResponse({ ok: false, error: toLoadError(e) } satisfies WebSearchReply),
+      );
+      return true; // reply asynchronously
+    });
 
     browser.runtime.onMessage.addListener((msg: LoadsMessage) => {
       if (msg?.type !== 'loads') return;

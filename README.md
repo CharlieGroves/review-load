@@ -49,9 +49,11 @@ ReviewLoad only adds information. It never requests reviews, assigns anyone, or 
 
 Want to see it before creating a token? Click the ReviewLoad icon in your toolbar and turn on **Demo mode**: every pill shows clearly labelled sample numbers and nothing is sent anywhere.
 
-## Set up a token (two minutes)
+## Set up a token (recommended, two minutes)
 
 ReviewLoad reads GitHub's search API with your own read-only token. There's no ReviewLoad server.
+
+Until you add one, ReviewLoad falls back to GitHub's own pull request dashboard, using the session you're signed in with. Treat that as a stopgap: the dashboard is internal to GitHub's web app, not a documented API, so a GitHub change can break it without warning. It's also slower, at one request per person instead of five people per request.
 
 1. Open **[this pre-filled token form](https://github.com/settings/personal-access-tokens/new?name=ReviewLoad&description=Read-only+token+for+the+ReviewLoad+browser+extension&expires_in=90&pull_requests=read)**. It already sets the name, a 90-day expiry, and **Pull requests: Read-only** (Metadata: Read is added automatically).
 2. Set **Resource owner** to your organisation and **Repository access** to **All repositories**.
@@ -95,14 +97,14 @@ These numbers exist to protect busy reviewers at the moment someone is choosing 
 ## Privacy
 
 - Your token is stored in your browser's local extension storage. It isn't synced between devices and it isn't encrypted at rest, so use a read-only token with an expiry.
-- ReviewLoad talks only to `api.github.com`. No analytics, no error reporting, no third-party servers.
-- Permissions: `storage`, plus access to `github.com` (to draw the pills) and `api.github.com` (to count).
+- ReviewLoad talks only to GitHub: `api.github.com` with a token, or `github.com/pulls` with your signed-in session without one. No analytics, no error reporting, no third-party servers.
+- Permissions: `storage`, plus access to `github.com` (to draw the pills, and to count when no token is saved) and `api.github.com` (to count with a token).
 
 Full details in [PRIVACY.md](PRIVACY.md).
 
 ## FAQ
 
-**Why does it need a token at all?** The counts come from GitHub's search API, which needs authentication to see private repositories and to get a usable rate limit.
+**Why does it need a token?** The token lets ReviewLoad use GitHub's search API, which is documented, stable, batched and has its own rate limit. Without one, ReviewLoad falls back to GitHub's internal pull request dashboard through your signed-in session. That works for now, but it depends on how GitHub's web app works today and may stop working when GitHub changes it.
 
 **How is this different from GitHub's team auto-assignment?** Auto-assignment only kicks in when you request a whole team, needs an organisation admin to set it up, and shows nobody the numbers. ReviewLoad helps with the reviewers you pick by hand, needs no admin, and works alongside auto-assignment.
 

@@ -13,11 +13,16 @@ interface GraphQLError {
   message?: string;
 }
 
+/** Any thrown value as an error the UI knows how to explain. */
+export function toLoadError(e: unknown): LoadError {
+  return e instanceof GitHubError ? e.detail : { kind: 'network', message: String(e) };
+}
+
 function ssoUrl(header: string | null): string | undefined {
   return header?.match(/url=([^;\s]+)/)?.[1];
 }
 
-function rateLimitUntil(res: Response, now: number): number {
+export function rateLimitUntil(res: Response, now: number): number {
   const retryAfter = Number(res.headers.get('retry-after'));
   if (retryAfter > 0) return now + retryAfter * 1000;
   const reset = Number(res.headers.get('x-ratelimit-reset'));
