@@ -6,8 +6,8 @@
 
 <!-- Badges are local SVGs (GitHub's image proxy times out on shields.io). Bump docs/badges/release.svg when tagging a release. -->
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/reviewload/ncokcokbfpbigdoagghpdpncjfhpocol"><img src="docs/badges/chrome-web-store.svg" alt="Install from the Chrome Web Store"></a>
   <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="docs/badges/release.svg" alt="Release v0.2.0"></a>
-  <img src="docs/badges/browsers.svg" alt="Chrome, Firefox and Edge">
   <a href="PRIVACY.md"><img src="docs/badges/tracking.svg" alt="No tracking"></a>
   <a href="LICENSE"><img src="docs/badges/licence.svg" alt="MIT licence"></a>
 </p>
@@ -42,8 +42,9 @@ ReviewLoad only adds information. It never requests reviews, assigns anyone, or 
 
 ## Install
 
-- Chrome / Edge: _Chrome Web Store link coming once the listing is approved_
-- Firefox: _Firefox Add-ons link coming once the listing is approved_
+- **Chrome:** [install from the Chrome Web Store](https://chromewebstore.google.com/detail/reviewload/ncokcokbfpbigdoagghpdpncjfhpocol)
+- **Edge:** install from the same [Chrome Web Store listing](https://chromewebstore.google.com/detail/reviewload/ncokcokbfpbigdoagghpdpncjfhpocol); Edge offers to allow extensions from other stores the first time
+- **Firefox:** _Firefox Add-ons listing in review_
 - From source: see [Development](#development)
 
 Want to see it before creating a token? Click the ReviewLoad icon in your toolbar and turn on **Demo mode**: every pill shows clearly labelled sample numbers and nothing is sent anywhere.
