@@ -7,7 +7,7 @@
 <!-- Badges are local SVGs (GitHub's image proxy times out on shields.io). Bump docs/badges/release.svg when tagging a release. -->
 <p align="center">
   <a href="https://chromewebstore.google.com/detail/reviewload/ncokcokbfpbigdoagghpdpncjfhpocol"><img src="docs/badges/chrome-web-store.svg" alt="Install from the Chrome Web Store"></a>
-  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="docs/badges/release.svg" alt="Release v0.2.0"></a>
+  <a href="https://github.com/CharlieGroves/review-load/releases/latest"><img src="docs/badges/release.svg" alt="Release v0.2.1"></a>
   <a href="PRIVACY.md"><img src="docs/badges/tracking.svg" alt="No tracking"></a>
   <a href="LICENSE"><img src="docs/badges/licence.svg" alt="MIT licence"></a>
 </p>
