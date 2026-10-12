@@ -1,6 +1,6 @@
 import { BATCH_SIZE, chunk } from './query';
 import { GitHubError } from './github';
-import type { Load, LoadError, PrSnapshot } from './types';
+import type { Load, LoadError } from './types';
 
 export const TTL = 5 * 60_000;
 export const MAX_IN_FLIGHT = 4;
@@ -8,30 +8,21 @@ export const MAX_IN_FLIGHT = 4;
 export interface Cache {
   getLoads(keys: string[]): Promise<Record<string, Load | undefined>>;
   setLoads(entries: Record<string, Load>): Promise<void>;
-  getSnapshot(key: string): Promise<(PrSnapshot & { fetchedAt: number }) | undefined>;
-  setSnapshot(key: string, s: PrSnapshot & { fetchedAt: number }): Promise<void>;
   getBackoff(): Promise<number>;
   setBackoff(until: number): Promise<void>;
 }
 
 export interface Batch {
   loads: Map<string, Load>;
-  snapshot?: PrSnapshot;
 }
 
 export interface LoadRequest {
   /** Cache namespace: scope qualifier + team toggle, so changing settings never shows wrong numbers. */
   prefix: string;
   logins: string[];
-  /** Cache key for the current PR snapshot, if on a PR page. */
-  snapshotKey?: string;
   force?: boolean;
-  fetchBatch(logins: string[], withSnapshot: boolean): Promise<Batch>;
-  onUpdate(update: {
-    loads: Record<string, Load & { stale: boolean }>;
-    snapshot?: PrSnapshot;
-    error?: LoadError;
-  }): void;
+  fetchBatch(logins: string[]): Promise<Batch>;
+  onUpdate(update: { loads: Record<string, Load & { stale: boolean }>; error?: LoadError }): void;
 }
 
 export class Loader {
@@ -48,7 +39,6 @@ export class Loader {
     const now = this.now();
     const key = (login: string) => `${req.prefix}|${login.toLowerCase()}`;
     const cached = await this.cache.getLoads(req.logins.map(key));
-    const snap = req.snapshotKey ? await this.cache.getSnapshot(req.snapshotKey) : undefined;
 
     const isFresh = (t: number | undefined) => t !== undefined && now - t < TTL;
     const initial: Record<string, Load & { stale: boolean }> = {};
@@ -56,7 +46,7 @@ export class Loader {
       const c = cached[key(login)];
       if (c) initial[login] = { ...c, stale: !isFresh(c.fetchedAt) };
     }
-    if (Object.keys(initial).length || snap) req.onUpdate({ loads: initial, snapshot: snap && strip(snap) });
+    if (Object.keys(initial).length) req.onUpdate({ loads: initial });
 
     const backoff = await this.cache.getBackoff();
     if (backoff > now) {
@@ -65,7 +55,6 @@ export class Loader {
     }
 
     const need = req.logins.filter((l) => req.force || !isFresh(cached[key(l)]?.fetchedAt));
-    const needSnapshot = !!req.snapshotKey && (req.force || !isFresh(snap?.fetchedAt));
 
     const waits: Promise<unknown>[] = [];
     const fresh: string[] = [];
@@ -81,12 +70,8 @@ export class Loader {
       } else fresh.push(login);
     }
 
-    const batches = chunk(fresh, BATCH_SIZE);
-    if (needSnapshot && batches.length === 0) batches.push([]);
-
-    batches.forEach((logins, i) => {
-      const withSnapshot = needSnapshot && i === 0;
-      const p = this.limit(() => req.fetchBatch(logins, withSnapshot));
+    chunk(fresh, BATCH_SIZE).forEach((logins) => {
+      const p = this.limit(() => req.fetchBatch(logins));
       logins.forEach((l) => this.inFlight.set(key(l), p));
       waits.push(
         p
@@ -98,9 +83,7 @@ export class Loader {
               loads[login] = { ...load, stale: false };
             });
             await this.cache.setLoads(entries);
-            if (b.snapshot && req.snapshotKey)
-              await this.cache.setSnapshot(req.snapshotKey, { ...b.snapshot, fetchedAt: this.now() });
-            req.onUpdate({ loads, snapshot: b.snapshot });
+            req.onUpdate({ loads });
           })
           .catch(async (e) => {
             const error: LoadError = e instanceof GitHubError ? e.detail : { kind: 'network', message: String(e) };
@@ -129,8 +112,4 @@ export class Loader {
       else this.queue.push(run);
     });
   }
-}
-
-function strip({ countable, requested }: PrSnapshot & { fetchedAt: number }): PrSnapshot {
-  return { countable, requested };
 }

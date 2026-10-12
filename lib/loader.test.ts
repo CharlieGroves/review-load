@@ -1,11 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { GitHubError } from './github';
 import { Loader, MAX_IN_FLIGHT, TTL, type Batch, type Cache, type LoadRequest } from './loader';
-import type { Load, PrSnapshot } from './types';
+import type { Load } from './types';
 
 function memoryCache(): Cache & { loads: Map<string, Load>; backoff: number } {
   const loads = new Map<string, Load>();
-  const snaps = new Map<string, PrSnapshot & { fetchedAt: number }>();
   const c = {
     loads,
     backoff: 0,
@@ -14,12 +13,6 @@ function memoryCache(): Cache & { loads: Map<string, Load>; backoff: number } {
     },
     async setLoads(e: Record<string, Load>) {
       for (const [k, v] of Object.entries(e)) loads.set(k, v);
-    },
-    async getSnapshot(k: string) {
-      return snaps.get(k);
-    },
-    async setSnapshot(k: string, s: PrSnapshot & { fetchedAt: number }) {
-      snaps.set(k, s);
     },
     async getBackoff() {
       return c.backoff;
@@ -34,9 +27,8 @@ function memoryCache(): Cache & { loads: Map<string, Load>; backoff: number } {
 const load = (count: number, fetchedAt: number): Load => ({ count, prs: [], fetchedAt });
 
 function fetcher(now: number) {
-  return vi.fn(async (logins: string[], withSnapshot: boolean): Promise<Batch> => ({
+  return vi.fn(async (logins: string[]): Promise<Batch> => ({
     loads: new Map(logins.map((l) => [l, load(l.length, now)])),
-    snapshot: withSnapshot ? { countable: true, requested: ['alice'] } : undefined,
   }));
 }
 
@@ -52,7 +44,7 @@ describe('Loader', () => {
     const fetchBatch = fetcher(100);
     const { req, updates } = request({ logins: ['alice', 'Bob'], fetchBatch });
     await new Loader(cache, () => 100).load(req);
-    expect(fetchBatch).toHaveBeenCalledWith(['alice', 'Bob'], false);
+    expect(fetchBatch).toHaveBeenCalledWith(['alice', 'Bob']);
     expect(cache.loads.get('user:acme|direct|bob')).toEqual(load(3, 100));
     expect(updates.at(-1)?.loads.Bob).toEqual({ ...load(3, 100), stale: false });
   });
@@ -64,7 +56,7 @@ describe('Loader', () => {
     const { req, updates } = request({ logins: ['alice'], fetchBatch });
     await new Loader(cache, () => TTL - 1).load(req);
     expect(fetchBatch).not.toHaveBeenCalled();
-    expect(updates).toEqual([{ loads: { alice: { ...load(4, 0), stale: false } }, snapshot: undefined }]);
+    expect(updates).toEqual([{ loads: { alice: { ...load(4, 0), stale: false } } }]);
   });
 
   it('shows stale numbers first, then refreshes them', async () => {
@@ -121,31 +113,6 @@ describe('Loader', () => {
       alice: { count: 2 },
       bob: { count: 2 },
     });
-  });
-
-  it('asks for the PR snapshot once, in the first batch, and caches it', async () => {
-    const cache = memoryCache();
-    const fetchBatch = fetcher(0);
-    const logins = Array.from({ length: 7 }, (_, i) => `user${i}`);
-    const { req, updates } = request({ logins, fetchBatch, snapshotKey: 'acme/web#7' });
-    const loader = new Loader(cache, () => 0);
-    await loader.load(req);
-    expect(fetchBatch.mock.calls.map((c) => c[1])).toEqual([true, false]);
-    expect(updates.find((u) => u.snapshot)?.snapshot).toEqual({ countable: true, requested: ['alice'] });
-
-    fetchBatch.mockClear();
-    const again = request({ logins, fetchBatch, snapshotKey: 'acme/web#7' });
-    await loader.load(again.req);
-    expect(fetchBatch).not.toHaveBeenCalled();
-    expect(again.updates[0]!.snapshot).toEqual({ countable: true, requested: ['alice'] });
-  });
-
-  it('fetches a stale snapshot even when every login is cached', async () => {
-    const cache = memoryCache();
-    cache.loads.set('user:acme|direct|alice', load(1, 0));
-    const fetchBatch = fetcher(0);
-    await new Loader(cache, () => 0).load(request({ logins: ['alice'], fetchBatch, snapshotKey: 'acme/web#7' }).req);
-    expect(fetchBatch).toHaveBeenCalledWith([], true);
   });
 
   it('records a rate limit and stops fetching until it passes', async () => {

@@ -20,12 +20,6 @@ export interface PageContext {
   pr?: number;
 }
 
-/** Who is directly requested on the current PR, from the same fetch as the counts. */
-export interface PrSnapshot {
-  countable: boolean;
-  requested: string[];
-}
-
 export type LoadError =
   | { kind: 'no-token' }
   | { kind: 'unauthorized' }
@@ -59,6 +53,5 @@ export type Request =
 export interface LoadsMessage {
   type: 'loads';
   loads: Record<string, Load & { stale: boolean }>;
-  snapshot?: PrSnapshot;
   error?: LoadError;
 }

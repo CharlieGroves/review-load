@@ -13,14 +13,6 @@ const server = setupServer(
     const data: Record<string, unknown> = {};
     for (const k of Object.keys(variables).filter((k) => /^q\d+$/.test(k)))
       data[k.replace('q', 'p')] = { issueCount: 4, nodes: [] };
-    if (variables.owner)
-      data.pr = {
-        pullRequest: {
-          state: 'OPEN',
-          isDraft: false,
-          reviewRequests: { nodes: [{ requestedReviewer: { __typename: 'User', login: 'alice' } }] },
-        },
-      };
     return HttpResponse.json({ data });
   }),
 );
@@ -49,12 +41,11 @@ describe('background', () => {
     expect(sent[0]).toEqual({ type: 'loads', loads: {}, error: { kind: 'no-token' } });
   });
 
-  it('fetches counts and the PR snapshot and pushes them to the tab', async () => {
+  it('fetches counts and pushes them to the tab', async () => {
     await tokenItem.setValue('tok');
     await ask({ type: 'getLoads', logins: ['alice', 'bob'], ctx: { owner: 'acme', repo: 'web', pr: 7 } });
     await vi.waitFor(() => expect(sent.some((m) => m.loads.alice)).toBe(true));
     const msg = sent.find((m) => m.loads.alice)!;
     expect(msg.loads.alice).toMatchObject({ count: 4, stale: false });
-    expect(msg.snapshot).toEqual({ countable: true, requested: ['alice'] });
   });
 });

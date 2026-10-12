@@ -33,15 +33,13 @@ export default defineBackground(() => {
       return;
     }
     const logins = [...new Set(msg.logins.filter(isLogin))];
-    const pr = ctx.pr ? { owner: ctx.owner, repo: ctx.repo, number: ctx.pr } : undefined;
 
     await loader.load({
       prefix: `${qualifier}|${settings.includeTeams ? 'teams' : 'direct'}`,
       logins,
-      snapshotKey: pr && `${pr.owner}/${pr.repo}#${pr.number}`.toLowerCase(),
       force: msg.force,
-      async fetchBatch(batch, withSnapshot) {
-        const { query, variables } = buildQuery(batch, qualifier, settings.includeTeams, withSnapshot ? pr : undefined);
+      async fetchBatch(batch) {
+        const { query, variables } = buildQuery(batch, qualifier, settings.includeTeams);
         const data = await graphql(token, query, variables);
         return parseResponse(batch, data, Date.now());
       },

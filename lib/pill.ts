@@ -208,7 +208,7 @@ function content(login: string, state: PillState, now: number, openOptions: () =
   }
   const meta = state.demo
     ? 'Demo data: turn off demo mode in ReviewLoad options.'
-    : `Excludes this PR. Oldest first. ${state.stale ? `Saved ${age(new Date(state.fetchedAt).toISOString(), now)} ago.` : ''}`;
+    : `Oldest first. ${state.stale ? `Saved ${age(new Date(state.fetchedAt).toISOString(), now)} ago.` : ''}`;
   nodes.push(el('div', 'meta', meta));
   if (state.error) nodes.push(el('div', 'meta', errorText(state.error)));
   return nodes;

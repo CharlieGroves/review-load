@@ -1,9 +1,9 @@
 import { demoLoad } from '@/lib/demo';
 import { findSlots, pageContext } from '@/lib/page';
 import { ensureHost, Popover, renderPill, type PillState } from '@/lib/pill';
-import { displayCount, scopeQualifier, searchString } from '@/lib/query';
+import { scopeQualifier, searchString } from '@/lib/query';
 import { getSettings, settingsItem } from '@/lib/settings';
-import type { Load, LoadError, LoadsMessage, PageContext, PrSnapshot, Request, Settings } from '@/lib/types';
+import type { Load, LoadError, LoadsMessage, PageContext, Request, Settings } from '@/lib/types';
 
 const REQUEST_DEBOUNCE_MS = 150;
 /** Search indexing lags a reviewer being added; wait before re-asking. */
@@ -20,7 +20,6 @@ export default defineContentScript({
     let page: PageContext | undefined;
     let pageKey = '';
     let loads = new Map<string, Load & { stale: boolean }>();
-    let snapshot: PrSnapshot | undefined;
     let error: LoadError | undefined;
     let asked = new Set<string>();
     let pending = new Set<string>();
@@ -36,7 +35,6 @@ export default defineContentScript({
       pageKey = key;
       page = next;
       loads = new Map();
-      snapshot = undefined;
       error = undefined;
       asked = new Set();
       pending = new Set();
@@ -63,11 +61,10 @@ export default defineContentScript({
       }
       const load = loads.get(login.toLowerCase());
       if (!load) return error ? { kind: 'error', error } : { kind: 'loading' };
-      const here = page?.pr ? `https://github.com/${page.owner}/${page.repo}/pull/${page.pr}`.toLowerCase() : '';
       return {
         kind: 'count',
-        n: displayCount(login, load, snapshot),
-        prs: load.prs.filter((p) => p.url.toLowerCase() !== here),
+        n: load.count,
+        prs: load.prs,
         stale: load.stale,
         fetchedAt: load.fetchedAt,
         demo: false,
@@ -111,7 +108,7 @@ export default defineContentScript({
       }
       if (missing.length) requestLoads(missing);
 
-      // When reviewers are added or removed, re-fetch them so "excludes this PR" stays true.
+      // When reviewers are added or removed, re-fetch them so their counts include or drop this PR.
       const sidebarNow = sidebar
         .map((s) => s.login.toLowerCase())
         .sort()
@@ -137,7 +134,6 @@ export default defineContentScript({
     browser.runtime.onMessage.addListener((msg: LoadsMessage) => {
       if (msg?.type !== 'loads') return;
       for (const [login, load] of Object.entries(msg.loads)) loads.set(login.toLowerCase(), load);
-      if (msg.snapshot) snapshot = msg.snapshot;
       if (msg.error) error = msg.error;
       else if (Object.keys(msg.loads).length && error?.kind !== 'rate-limited') error = undefined;
       schedule();

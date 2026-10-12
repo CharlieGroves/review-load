@@ -1,4 +1,4 @@
-import type { Load, PageContext, PrSnapshot, PrSummary } from './types';
+import type { Load, PageContext, PrSummary } from './types';
 
 const LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
 const REPO = /^[A-Za-z0-9._-]{1,100}$/;
@@ -18,17 +18,13 @@ export function searchString(login: string, qualifier: string, includeTeams: boo
   return `is:pr is:open draft:false ${who}:${login} ${qualifier} sort:created-asc`;
 }
 
-/**
- * One document with an aliased search per login, plus the current PR's direct
- * requests when `pr` is set. Search strings travel as variables, never inlined.
- */
+/** One document with an aliased search per login. Search strings travel as variables, never inlined. */
 export function buildQuery(
   logins: string[],
   qualifier: string,
   includeTeams: boolean,
-  pr?: { owner: string; repo: string; number: number },
-): { query: string; variables: Record<string, string | number> } {
-  const variables: Record<string, string | number> = {};
+): { query: string; variables: Record<string, string> } {
+  const variables: Record<string, string> = {};
   const defs: string[] = [];
   const fields: string[] = [];
   logins.forEach((login, i) => {
@@ -39,15 +35,7 @@ export function buildQuery(
       `p${i}: search(type: ISSUE, first: 5, query: $q${i}) { issueCount nodes { ... on PullRequest { title url createdAt repository { nameWithOwner } } } }`,
     );
   });
-  if (pr) {
-    Object.assign(variables, { owner: pr.owner, repo: pr.repo, number: pr.number });
-    defs.push('$owner: String!', '$repo: String!', '$number: Int!');
-    fields.push(
-      'pr: repository(owner: $owner, name: $repo) { pullRequest(number: $number) { state isDraft reviewRequests(first: 100) { nodes { requestedReviewer { __typename ... on User { login } } } } } }',
-    );
-  }
-  const head = defs.length ? `query(${defs.join(', ')})` : 'query';
-  return { query: `${head} { ${fields.join(' ')} }`, variables };
+  return { query: `query(${defs.join(', ')}) { ${fields.join(' ')} }`, variables };
 }
 
 interface SearchResult {
@@ -60,19 +48,11 @@ interface SearchResult {
   } | null>;
 }
 
-interface PrResult {
-  pullRequest: {
-    state: string;
-    isDraft: boolean;
-    reviewRequests: { nodes: Array<{ requestedReviewer: { __typename: string; login?: string } | null }> };
-  } | null;
-}
-
 export function parseResponse(
   logins: string[],
   data: Record<string, unknown> | null | undefined,
   now: number,
-): { loads: Map<string, Load>; snapshot?: PrSnapshot } {
+): { loads: Map<string, Load> } {
   const loads = new Map<string, Load>();
   logins.forEach((login, i) => {
     const r = data?.[`p${i}`] as SearchResult | null | undefined;
@@ -87,23 +67,7 @@ export function parseResponse(
       }));
     loads.set(login, { count: r.issueCount, prs, fetchedAt: now });
   });
-  const pr = (data?.pr as PrResult | null | undefined)?.pullRequest;
-  const snapshot = pr
-    ? {
-        countable: pr.state === 'OPEN' && !pr.isDraft,
-        requested: pr.reviewRequests.nodes
-          .map((n) => n.requestedReviewer)
-          .filter((r) => r?.__typename === 'User' && r.login)
-          .map((r) => r!.login!),
-      }
-    : undefined;
-  return { loads, snapshot };
-}
-
-/** The count to display: the current PR is excluded, since you're looking at it. */
-export function displayCount(login: string, load: Pick<Load, 'count'>, snapshot: PrSnapshot | undefined): number {
-  const here = snapshot?.countable && snapshot.requested.some((l) => l.toLowerCase() === login.toLowerCase());
-  return Math.max(0, load.count - (here ? 1 : 0));
+  return { loads };
 }
 
 export function chunk<T>(xs: T[], size: number): T[][] {

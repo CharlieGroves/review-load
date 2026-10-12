@@ -1,6 +1,6 @@
 import { storage } from 'wxt/utils/storage';
 import type { Cache } from './loader';
-import type { Load, PrSnapshot } from './types';
+import type { Load } from './types';
 
 /**
  * storage.session survives the MV3 worker being shut down when idle, and is
@@ -17,12 +17,6 @@ export const sessionCache: Cache = {
   async setLoads(entries) {
     const items = Object.entries(entries).map(([k, value]) => ({ key: `session:load:${k}` as const, value }));
     if (items.length) await storage.setItems(items);
-  },
-  async getSnapshot(key) {
-    return (await storage.getItem<PrSnapshot & { fetchedAt: number }>(`session:pr:${key}`)) ?? undefined;
-  },
-  async setSnapshot(key, s) {
-    await storage.setItem(`session:pr:${key}`, s);
   },
   async getBackoff() {
     return (await storage.getItem<number>('session:backoffUntil')) ?? 0;

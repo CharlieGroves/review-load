@@ -26,7 +26,7 @@
 
 Open the Reviewers gear on any pull request and each person gets a small pill:
 
-- **The number** is how many open pull requests are waiting on their review right now, not counting the one you're looking at.
+- **The number** is how many open pull requests are waiting on their review right now, including the one you're looking at.
 - **The colour** goes green → amber → red as that number rises (thresholds are yours to change).
 - **Hover** to see the oldest five, with links, and a link to the full list on GitHub.
 

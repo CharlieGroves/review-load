@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildQuery, chunk, displayCount, parseResponse, scopeQualifier, searchString } from './query';
+import { buildQuery, chunk, parseResponse, scopeQualifier, searchString } from './query';
 
 describe('scopeQualifier', () => {
   it('uses user: for the owner, which works for orgs and personal accounts', () => {
@@ -29,17 +29,6 @@ describe('buildQuery', () => {
     expect(query).toContain('p0: search(type: ISSUE, first: 5, query: $q0)');
     expect(query).not.toContain('alice');
     expect(variables.q1).toContain('user-review-requested:bob-2');
-  });
-
-  it('adds the current PR snapshot when asked', () => {
-    const { query, variables } = buildQuery(['alice'], 'user:acme', false, { owner: 'acme', repo: 'web', number: 7 });
-    expect(query).toContain('pr: repository(owner: $owner, name: $repo)');
-    expect(variables).toMatchObject({ owner: 'acme', repo: 'web', number: 7 });
-  });
-
-  it('builds a snapshot-only query with no logins', () => {
-    const { query } = buildQuery([], 'user:acme', false, { owner: 'acme', repo: 'web', number: 7 });
-    expect(query).not.toContain('search(');
   });
 
   it('refuses logins that could alter the search', () => {
@@ -87,54 +76,6 @@ describe('parseResponse', () => {
     const { loads } = parseResponse(['alice', 'bob'], { p0: null, p1: { issueCount: 1, nodes: [null] } }, 0);
     expect(loads.has('alice')).toBe(false);
     expect(loads.get('bob')).toMatchObject({ count: 1, prs: [] });
-  });
-
-  it('reads direct user requests from the PR snapshot, ignoring teams', () => {
-    const { snapshot } = parseResponse(
-      [],
-      {
-        pr: {
-          pullRequest: {
-            state: 'OPEN',
-            isDraft: false,
-            reviewRequests: {
-              nodes: [
-                { requestedReviewer: { __typename: 'User', login: 'alice' } },
-                { requestedReviewer: { __typename: 'Team' } },
-                { requestedReviewer: null },
-              ],
-            },
-          },
-        },
-      },
-      0,
-    );
-    expect(snapshot).toEqual({ countable: true, requested: ['alice'] });
-  });
-
-  it('marks drafts and closed PRs as not counted', () => {
-    const snap = (state: string, isDraft: boolean) =>
-      parseResponse([], { pr: { pullRequest: { state, isDraft, reviewRequests: { nodes: [] } } } }, 0).snapshot;
-    expect(snap('OPEN', true)?.countable).toBe(false);
-    expect(snap('MERGED', false)?.countable).toBe(false);
-  });
-});
-
-describe('displayCount', () => {
-  const snapshot = { countable: true, requested: ['Alice'] };
-
-  it('excludes the current PR for people requested on it', () => {
-    expect(displayCount('alice', { count: 3 }, snapshot)).toBe(2);
-    expect(displayCount('bob', { count: 3 }, snapshot)).toBe(3);
-  });
-
-  it('never goes below zero while search indexing catches up', () => {
-    expect(displayCount('alice', { count: 0 }, snapshot)).toBe(0);
-  });
-
-  it('does not subtract on drafts or without a snapshot', () => {
-    expect(displayCount('alice', { count: 3 }, { ...snapshot, countable: false })).toBe(3);
-    expect(displayCount('alice', { count: 3 }, undefined)).toBe(3);
   });
 });
 
