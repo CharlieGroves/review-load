@@ -181,4 +181,22 @@ describe('Loader', () => {
     expect(cache.loads.size).toBe(0);
     expect(cache.backoff).toBe(0);
   });
+
+  it('caches and pushes the loads of a partly failed batch, with its error', async () => {
+    const cache = memoryCache();
+    const { req, updates } = request({
+      logins: ['alice', 'bob'],
+      fetchBatch: async () => ({
+        loads: new Map([['alice', load(2, 0)]]),
+        error: { kind: 'rate-limited', until: 60_000 },
+      }),
+    });
+    await new Loader(cache, () => 0).load(req);
+    expect(updates.at(-1)).toMatchObject({
+      loads: { alice: { count: 2, stale: false } },
+      error: { kind: 'rate-limited', until: 60_000 },
+    });
+    expect(cache.loads.get('user:acme|direct|alice')).toEqual(load(2, 0));
+    expect(cache.backoff).toBe(60_000);
+  });
 });

@@ -3,7 +3,7 @@ import { findSlots, pageContext } from '@/lib/page';
 import { ensureHost, Popover, renderPill, type PillState } from '@/lib/pill';
 import { displayCount, scopeQualifier, searchString } from '@/lib/query';
 import { getSettings, settingsItem } from '@/lib/settings';
-import { GitHubError } from '@/lib/github';
+import { toLoadError } from '@/lib/github';
 import type {
   Load,
   LoadError,
@@ -151,11 +151,7 @@ export default defineContentScript({
       if (msg?.type !== 'webSearch') return;
       webSearch(msg.query).then(
         (result) => sendResponse({ ok: true, result } satisfies WebSearchReply),
-        (e) =>
-          sendResponse({
-            ok: false,
-            error: e instanceof GitHubError ? e.detail : { kind: 'network', message: String(e) },
-          } satisfies WebSearchReply),
+        (e) => sendResponse({ ok: false, error: toLoadError(e) } satisfies WebSearchReply),
       );
       return true; // reply asynchronously
     });

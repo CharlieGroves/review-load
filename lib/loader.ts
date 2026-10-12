@@ -1,5 +1,5 @@
 import { BATCH_SIZE, chunk } from './query';
-import { GitHubError } from './github';
+import { toLoadError } from './github';
 import type { Load, LoadError, PrSnapshot } from './types';
 
 export const TTL = 5 * 60_000;
@@ -17,6 +17,8 @@ export interface Cache {
 export interface Batch {
   loads: Map<string, Load>;
   snapshot?: PrSnapshot;
+  /** Set when part of the batch failed; `loads` holds the people that succeeded. */
+  error?: LoadError;
 }
 
 export interface LoadRequest {
@@ -100,10 +102,11 @@ export class Loader {
             await this.cache.setLoads(entries);
             if (b.snapshot && req.snapshotKey)
               await this.cache.setSnapshot(req.snapshotKey, { ...b.snapshot, fetchedAt: this.now() });
-            req.onUpdate({ loads, snapshot: b.snapshot });
+            if (b.error?.kind === 'rate-limited') await this.cache.setBackoff(b.error.until);
+            req.onUpdate({ loads, snapshot: b.snapshot, ...(b.error && { error: b.error }) });
           })
           .catch(async (e) => {
-            const error: LoadError = e instanceof GitHubError ? e.detail : { kind: 'network', message: String(e) };
+            const error = toLoadError(e);
             if (error.kind === 'rate-limited') await this.cache.setBackoff(error.until);
             req.onUpdate({ loads: {}, error });
           })

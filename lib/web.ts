@@ -1,4 +1,4 @@
-import { GitHubError } from './github';
+import { GitHubError, rateLimitUntil } from './github';
 import { searchString } from './query';
 import type { Load, PrSummary } from './types';
 
@@ -59,26 +59,26 @@ export function parseWebSearch(body: unknown): WebSearchResult {
 
 /** Fetch one dashboard search. Call from a github.com page so the session cookies go along. */
 export async function webSearch(query: string, now = Date.now()): Promise<WebSearchResult> {
-  // Firefox content scripts need the page's own fetch to send first-party cookies.
-  const pageFetch: typeof fetch = (globalThis as { content?: { fetch: typeof fetch } }).content?.fetch ?? fetch;
+  // Firefox content scripts need the page's own fetch, called on the page, to send first-party cookies.
+  const page = (globalThis as { content?: { fetch: typeof fetch } }).content;
+  const pageFetch: typeof fetch = page ? page.fetch.bind(page) : fetch;
   let res: Response;
   try {
-    res = await pageFetch(webSearchUrl(query), { headers: HEADERS, credentials: 'include' });
+    // Manual redirects: when signed out, stop at the redirect instead of downloading the login page.
+    res = await pageFetch(webSearchUrl(query), { headers: HEADERS, credentials: 'include', redirect: 'manual' });
   } catch (e) {
     throw new GitHubError({ kind: 'network', message: String(e) });
   }
-  if (res.status === 429 || res.status === 403) {
-    const retryAfter = Number(res.headers.get('retry-after'));
-    throw new GitHubError({ kind: 'rate-limited', until: now + (retryAfter > 0 ? retryAfter * 1000 : 60_000) });
-  }
-  // Signed out: GitHub redirects to the login page or answers 401/404 with HTML.
-  const signedOut =
-    res.status === 401 ||
-    res.status === 404 ||
-    /\/login\b/.test(res.url) ||
-    !/json/.test(res.headers.get('content-type') ?? '');
-  if (signedOut) throw new GitHubError({ kind: 'no-token' });
+  const rateLimited =
+    res.status === 429 ||
+    (res.status === 403 && (res.headers.has('retry-after') || res.headers.get('x-ratelimit-remaining') === '0'));
+  if (rateLimited) throw new GitHubError({ kind: 'rate-limited', until: rateLimitUntil(res, now) });
+  // Signed out: GitHub redirects to the login page, or answers 401/404.
+  if (res.type === 'opaqueredirect' || res.status === 401 || res.status === 404)
+    throw new GitHubError({ kind: 'no-token' });
   if (!res.ok) throw new GitHubError({ kind: 'network', message: `HTTP ${res.status}` });
+  // A 200 that isn't JSON is a page rendered for a signed-out visitor.
+  if (!/json/.test(res.headers.get('content-type') ?? '')) throw new GitHubError({ kind: 'no-token' });
   return parseWebSearch(await res.json());
 }
 

@@ -1,5 +1,5 @@
 import { storage } from 'wxt/utils/storage';
-import { graphql, GitHubError } from './github';
+import { graphql, toLoadError } from './github';
 import { errorText } from './pill';
 import { tokenItem } from './settings';
 import type { LoadError } from './types';
@@ -43,7 +43,7 @@ export async function checkToken(token: string, now = Date.now()): Promise<Check
     await tokenStatusItem.setValue(status);
     return { ok: true, status };
   } catch (e) {
-    return { ok: false, error: e instanceof GitHubError ? e.detail : { kind: 'network', message: String(e) } };
+    return { ok: false, error: toLoadError(e) };
   }
 }
 

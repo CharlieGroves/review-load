@@ -1,5 +1,5 @@
-import { describe, expect, it, vi } from 'vitest';
-import { parseWebSearch, webLoad, webSearchUrl, type WebSearchResult } from './web';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { parseWebSearch, webLoad, webSearch, webSearchUrl, type WebSearchResult } from './web';
 
 const item = (repo: string, number: number) => ({
   title: `PR ${number}`,
@@ -43,6 +43,63 @@ describe('parseWebSearch', () => {
 describe('webSearchUrl', () => {
   it('encodes the query', () => {
     expect(webSearchUrl('is:pr a:b')).toBe('https://github.com/pulls?q=is%3Apr+a%3Ab&page=1');
+  });
+});
+
+describe('webSearch', () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  const respond = (res: Response) => {
+    const f = vi.fn(async () => res);
+    vi.stubGlobal('fetch', f);
+    return f;
+  };
+  const json = { 'content-type': 'application/json' };
+  const kind = (p: Promise<unknown>) =>
+    p.then(
+      () => 'ok',
+      (e: { detail: unknown }) => e.detail,
+    );
+
+  it('asks for JSON without following redirects', async () => {
+    const f = respond(new Response(JSON.stringify({ payload: { x: { results: [] } } }), { headers: json }));
+    await expect(webSearch('is:pr')).resolves.toEqual({ total: 0, items: [] });
+    expect(f).toHaveBeenCalledWith(
+      webSearchUrl('is:pr'),
+      expect.objectContaining({ credentials: 'include', redirect: 'manual' }),
+    );
+  });
+
+  it('treats a 429 as a rate limit, timed by retry-after', async () => {
+    respond(new Response('', { status: 429, headers: { 'retry-after': '30' } }));
+    expect(await kind(webSearch('q', 1_000))).toEqual({ kind: 'rate-limited', until: 31_000 });
+  });
+
+  it('treats a 403 with rate-limit headers as a rate limit', async () => {
+    respond(new Response('', { status: 403, headers: { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '90' } }));
+    expect(await kind(webSearch('q', 1_000))).toEqual({ kind: 'rate-limited', until: 90_000 });
+  });
+
+  it('treats any other 403 as an ordinary error', async () => {
+    respond(new Response('', { status: 403 }));
+    expect(await kind(webSearch('q'))).toEqual({ kind: 'network', message: 'HTTP 403' });
+  });
+
+  it('treats a redirect as signed out', async () => {
+    const redirected = new Response(null, { status: 200 });
+    Object.defineProperty(redirected, 'type', { value: 'opaqueredirect' });
+    respond(redirected);
+    expect(await kind(webSearch('q'))).toEqual({ kind: 'no-token' });
+  });
+
+  it('treats a 200 HTML page as signed out', async () => {
+    respond(new Response('<html>', { headers: { 'content-type': 'text/html' } }));
+    expect(await kind(webSearch('q'))).toEqual({ kind: 'no-token' });
+  });
+
+  it('reports a server error as a network error, not as signed out', async () => {
+    respond(new Response('<html>', { status: 502, headers: { 'content-type': 'text/html' } }));
+    expect(await kind(webSearch('q'))).toEqual({ kind: 'network', message: 'HTTP 502' });
   });
 });
 

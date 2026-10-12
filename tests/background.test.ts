@@ -29,17 +29,18 @@ afterAll(() => server.close());
 
 describe('background', () => {
   let sent: LoadsMessage[];
-  const searches: string[] = [];
-  let webReply: WebSearchReply;
+  let searches: string[];
+  let webReply: (query: string) => WebSearchReply;
 
   beforeEach(() => {
     fakeBrowser.reset();
     sent = [];
-    webReply = { ok: true, result: { total: 3, items: [] } };
+    searches = [];
+    webReply = () => ({ ok: true, result: { total: 3, items: [] } });
     fakeBrowser.tabs.sendMessage = vi.fn(async (_tabId: number, msg: LoadsMessage | WebSearchMessage) => {
       if (msg.type === 'webSearch') {
         searches.push(msg.query);
-        return webReply;
+        return webReply(msg.query);
       }
       sent.push(msg);
     }) as never;
@@ -51,17 +52,40 @@ describe('background', () => {
     await vi.waitFor(() => expect(sent.length).toBeGreaterThan(0));
   };
 
+  const ctx = { owner: 'acme', repo: 'web', pr: 7 };
+
   it('without a token, asks the tab to search github.com/pulls', async () => {
-    searches.length = 0;
-    await ask({ type: 'getLoads', logins: ['alice'], ctx: { owner: 'acme', repo: 'web', pr: 7 } });
+    await ask({ type: 'getLoads', logins: ['alice'], ctx });
     expect(searches[0]).toBe('is:pr is:open draft:false user-review-requested:alice user:acme sort:created-asc');
     expect(sent[0]?.loads.alice).toMatchObject({ count: 3, stale: false });
   });
 
-  it('without a token, reports a signed-out tab as no-token', async () => {
-    webReply = { ok: false, error: { kind: 'no-token' } };
-    await ask({ type: 'getLoads', logins: ['alice'], ctx: { owner: 'acme', repo: 'web', pr: 7 } });
+  it('without a token, sends a snapshot that subtracts nothing, since counts already exclude this PR', async () => {
+    await ask({ type: 'getLoads', logins: ['alice'], ctx });
+    expect(sent[0]?.snapshot).toEqual({ countable: false, requested: [] });
+  });
+
+  it('without a token, reports a signed-out tab as no-token and then stops asking', async () => {
+    webReply = () => ({ ok: false, error: { kind: 'no-token' } });
+    await ask({ type: 'getLoads', logins: ['alice'], ctx });
+    expect(sent[0]).toMatchObject({ type: 'loads', loads: {}, error: { kind: 'no-token' } });
+
+    const before = searches.length;
+    sent = [];
+    await ask({ type: 'getLoads', logins: ['bob'], ctx });
     expect(sent[0]).toEqual({ type: 'loads', loads: {}, error: { kind: 'no-token' } });
+    expect(searches.length).toBe(before);
+  });
+
+  it('without a token, keeps the people that loaded when someone else fails', async () => {
+    webReply = (q) =>
+      q.includes(':bob ')
+        ? { ok: false, error: { kind: 'network', message: 'HTTP 500' } }
+        : { ok: true, result: { total: 3, items: [] } };
+    await ask({ type: 'getLoads', logins: ['alice', 'bob'], ctx });
+    expect(sent[0]?.loads.alice).toMatchObject({ count: 3 });
+    expect(sent[0]?.loads.bob).toBeUndefined();
+    expect(sent[0]?.error).toEqual({ kind: 'network', message: 'HTTP 500' });
   });
 
   it('fetches counts and the PR snapshot and pushes them to the tab', async () => {
