@@ -44,7 +44,7 @@ ReviewLoad only adds information. It never requests reviews, assigns anyone, or 
 
 - **Chrome:** [install from the Chrome Web Store](https://chromewebstore.google.com/detail/reviewload/ncokcokbfpbigdoagghpdpncjfhpocol)
 - **Edge:** install from the same [Chrome Web Store listing](https://chromewebstore.google.com/detail/reviewload/ncokcokbfpbigdoagghpdpncjfhpocol); Edge offers to allow extensions from other stores the first time
-- **Firefox:** _Firefox Add-ons listing in review_
+- **Firefox:** [install from Firefox addons](https://addons.mozilla.org/en-GB/firefox/addon/reviewload/)
 - From source: see [Development](#development)
 
 Want to see it before creating a token? Click the ReviewLoad icon in your toolbar and turn on **Demo mode**: every pill shows clearly labelled sample numbers and nothing is sent anywhere.
