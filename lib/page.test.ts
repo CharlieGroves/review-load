@@ -6,6 +6,7 @@ import { age, ensureHost, HOST_ATTR, level, renderPill } from './pill';
 import { defaultSettings } from './types';
 
 const fixture = readFileSync(resolve(__dirname, '../fixtures/pr-sidebar.html'), 'utf8');
+const reactFixture = readFileSync(resolve(__dirname, '../fixtures/pr-sidebar-react.html'), 'utf8');
 
 describe('pageContext', () => {
   it('reads PR pages, including sub-tabs', () => {
@@ -43,6 +44,32 @@ describe('findSlots on the PR sidebar fixture', () => {
   it('finds nothing when the reviewers block is missing', () => {
     document.body.innerHTML = '<div>no sidebar</div>';
     expect(findSlots(document)).toEqual({ picker: [], sidebar: [] });
+  });
+});
+
+describe('findSlots on the redesigned PR page fixture', () => {
+  beforeEach(() => {
+    document.body.innerHTML = reactFixture;
+  });
+
+  it('finds people in the picker, selected or not, and skips teams and Copilot', () => {
+    expect(findSlots(document).picker.map((s) => s.login)).toEqual(['alice-example', 'bob-example', 'carol-example']);
+  });
+
+  it('puts picker pills between the login and the full name', () => {
+    const [alice, bob, carol] = findSlots(document).picker.map(ensureHost);
+    expect(alice!.closest('[data-component="ActionList.Item.Label"]')!.textContent).toBe('alice-exampleAlice Example');
+    expect(alice!.nextElementSibling!.textContent).toBe('Alice Example');
+    expect(bob!.nextElementSibling!.textContent).toBe('Bob Example');
+    expect(carol!.previousElementSibling!.textContent).toBe('carol-example');
+  });
+
+  it('puts one pill per sidebar reviewer beside the status icon, skipping bots and other sections', () => {
+    for (let i = 0; i < 3; i++) findSlots(document).sidebar.forEach(ensureHost);
+    expect(findSlots(document).sidebar.map((s) => s.login)).toEqual(['bob-example']);
+    const indicators = document.querySelector('[class*="indicators__"]')!;
+    expect(indicators.firstElementChild!.getAttribute(HOST_ATTR)).toBe('bob-example');
+    expect(document.querySelectorAll(`[${HOST_ATTR}]`)).toHaveLength(1);
   });
 });
 

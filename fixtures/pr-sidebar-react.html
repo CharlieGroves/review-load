@@ -1,0 +1,164 @@
+<!--
+  Trimmed copy of the redesigned (React) pull request page's Reviewers section and open
+  picker, observed November 2026. SVG paths and most Primer classes are dropped; the
+  attributes lib/selectors.ts relies on are kept verbatim. Logins are fake.
+  Update alongside lib/selectors.ts when GitHub changes the markup.
+-->
+<div data-testid="sticky-sidebar" class="sidebar__wcVu82">
+  <section aria-label="Activity" data-overview-sidebar-item="true">
+    <a href="/dave-example" data-hovercard-url="/users/dave-example/hovercard">dave-example</a>
+  </section>
+  <section aria-label="Reviewers" data-overview-sidebar-item="true">
+    <h4 class="disclosureHeading__ngTxJB">
+      <button
+        type="button"
+        class="disclosureHeader__rRyQaP"
+        aria-label="Manage reviewers"
+        data-dd-action-name="pull_requests.reviewers.open"
+        aria-expanded="true"
+        aria-haspopup="dialog"
+      >
+        <span class="sectionTitle__QwlXiE">Reviewers</span>
+      </button>
+    </h4>
+    <div class="body__mgM9cP">
+      <ul class="reviewerList__XUeF5Q">
+        <li class="reviewerRow__GGvypX withEffortMenu__-98tTK requestRow__-0sCBz">
+          <span class="reviewerIdentityGroup__T4IAow">
+            <a
+              class="Link--primary reviewerIdentity__UzEbKQ"
+              href="/apps/copilot-pull-request-reviewer"
+              data-hovercard-url="/copilot/hovercard?bot=copilot-pull-request-reviewer"
+              data-hovercard-type="copilot"
+              ><span class="reviewerName__kuuPXF">Copilot</span></a
+            >
+          </span>
+          <button type="button" data-dd-action-name="pull_requests.reviewers.request_copilot">Request</button>
+        </li>
+        <li class="reviewerRow__GGvypX">
+          <span class="reviewerIdentityColumn__T4ETBs">
+            <a
+              class="Link--primary reviewerIdentity__UzEbKQ"
+              href="/bob-example"
+              data-hovercard-url="/users/bob-example/hovercard"
+              data-hovercard-type="user"
+              ><span class="reviewerAvatar__D2Jz--"
+                ><img
+                  data-component="Avatar"
+                  alt=""
+                  width="20"
+                  height="20"
+                  src="https://avatars.githubusercontent.com/u/2?s=40&amp;v=4" /></span
+              ><span class="reviewerName__kuuPXF">bob-example</span></a
+            >
+            <span class="statusDescription__skvSaa" aria-hidden="true">Awaiting requested review from bob-example</span>
+          </span>
+          <span class="indicators__g13EPv"
+            ><span
+              role="img"
+              aria-label="Awaiting requested review from bob-example"
+              class="statusIcon__gxAEMz color-fg-attention"
+            ></span
+          ></span>
+        </li>
+        <li class="reviewerRow__GGvypX">
+          <span class="reviewerIdentityGroup__T4IAow">
+            <a class="Link--primary reviewerIdentity__UzEbKQ" href="/apps/cursor"
+              ><span class="reviewerName__kuuPXF">cursor[bot]</span></a
+            >
+          </span>
+          <span class="indicators__g13EPv"></span>
+        </li>
+      </ul>
+    </div>
+  </section>
+</div>
+
+<div role="dialog" data-component="AnchoredOverlay" aria-labelledby="title">
+  <div class="prc-SelectPanel-Wrapper-OD-e6" data-component="SelectPanel">
+    <h1 id="title">Request up to 100 reviewers</h1>
+    <input placeholder="Type or choose a user" role="combobox" aria-label="Filter reviewers" type="text" />
+    <ul role="listbox" aria-multiselectable="true">
+      <li role="none">
+        <ul aria-label="Suggestions" role="group">
+          <li
+            role="option"
+            aria-selected="false"
+            data-id="Copilot"
+            data-dd-action-name="pull_requests.reviewers.request"
+            data-component="ActionList.Item"
+          >
+            <img data-component="Avatar" alt="" src="https://avatars.githubusercontent.com/in/946600?s=40&amp;v=4" />
+            <span data-component="ActionList.Item.Label">Copilot</span>
+          </li>
+          <li
+            role="option"
+            aria-selected="false"
+            data-id="alice-example"
+            data-dd-action-name="pull_requests.reviewers.request"
+            data-component="ActionList.Item"
+          >
+            <img data-component="Avatar" alt="" src="https://avatars.githubusercontent.com/u/1?s=40&amp;v=4" />
+            <span data-component="ActionList.Item.Label"
+              >alice-example<span class="inlineSubtleName__IDXa4S">Alice Example</span></span
+            >
+            <span data-component="ActionList.Description">Recently edited and reviewed changes to these files</span>
+          </li>
+        </ul>
+      </li>
+      <li role="none">
+        <ul aria-label="Everyone else" role="group">
+          <li
+            role="option"
+            aria-selected="true"
+            data-id="bob-example"
+            data-dd-action-name="pull_requests.reviewers.remove"
+            data-component="ActionList.Item"
+          >
+            <img data-component="Avatar" alt="" src="https://avatars.githubusercontent.com/u/2?s=40&amp;v=4" />
+            <span data-component="ActionList.Item.Label"
+              ><span class="reviewerOption__5eOQau"
+                ><span class="reviewerOptionLogin__bLvEK9">bob-example</span
+                ><span class="reviewerOptionName__vaOHxC">Bob Example</span></span
+              ></span
+            >
+          </li>
+          <li
+            role="option"
+            aria-selected="false"
+            data-id="carol-example"
+            data-dd-action-name="pull_requests.reviewers.request"
+            data-component="ActionList.Item"
+          >
+            <img data-component="Avatar" alt="" src="https://avatars.githubusercontent.com/u/3?s=40&amp;v=4" />
+            <span data-component="ActionList.Item.Label"
+              ><span class="reviewerOption__5eOQau"
+                ><span class="reviewerOptionLogin__bLvEK9">carol-example</span></span
+              ></span
+            >
+          </li>
+          <li
+            role="option"
+            aria-selected="false"
+            data-id="acme/frontend"
+            data-dd-action-name="pull_requests.reviewers.request"
+            data-component="ActionList.Item"
+          >
+            <img
+              data-component="Avatar"
+              alt=""
+              data-square=""
+              src="https://avatars.githubusercontent.com/t/9?s=40&amp;v=4"
+            />
+            <span data-component="ActionList.Item.Label"
+              ><span class="reviewerOption__5eOQau"
+                ><span class="reviewerOptionLogin__bLvEK9">acme/frontend</span
+                ><span class="reviewerOptionName__vaOHxC">Frontend</span></span
+              ></span
+            >
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </div>
+</div>
