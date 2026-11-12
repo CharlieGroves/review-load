@@ -25,9 +25,11 @@ export function findSlots(root: ParentNode): { picker: Slot[]; sidebar: Slot[] }
     const login = row.dataset.id;
     const label = row.querySelector(s.reactPickerLabel);
     if (!login || !label || login.includes('/') || row.querySelector(s.reactPickerApp)) continue; // team or app
-    // Right after the login, before the full name.
+    // Right after the login, inside the row it shares with the full name, so the pill never wraps.
+    const loginEl = label.querySelector(s.reactPickerLogin);
     const name = label.querySelector(s.reactPickerName);
-    picker.push(name ? { login, anchor: name, where: 'before' } : { login, anchor: label, where: 'append' });
+    if (loginEl) picker.push({ login, anchor: loginEl, where: 'after' });
+    else picker.push(name ? { login, anchor: name, where: 'before' } : { login, anchor: label, where: 'append' });
   }
   const section = root.querySelector(s.reactReviewersButton)?.closest(s.reactSidebarSection);
   for (const el of section?.querySelectorAll(s.sidebarUser) ?? []) {

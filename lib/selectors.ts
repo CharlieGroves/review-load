@@ -28,6 +28,8 @@ export const selectors = {
   /** Copilot and other apps have /in/ avatars. */
   reactPickerApp: 'img[src*="/in/"]',
   reactPickerLabel: '[data-component="ActionList.Item.Label"]',
+  /** "Everyone else" rows wrap the login in a span; "Suggestions" rows leave it as bare text before the name. */
+  reactPickerLogin: '[class*="reviewerOptionLogin__"]',
   /** The full name after the login, if the person has one. */
   reactPickerName: '[class*="inlineSubtleName__"], [class*="reviewerOptionName__"]',
   reactPickerMenu: '[role="dialog"]',

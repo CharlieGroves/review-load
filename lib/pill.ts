@@ -31,7 +31,7 @@ export function age(iso: string, now: number): string {
 }
 
 const PILL_CSS = `
-:host { display: inline-flex; vertical-align: middle; margin-left: 6px; flex: none; }
+:host { display: inline-flex; vertical-align: middle; align-self: center; margin-left: 6px; flex: none; }
 .pill { font: 600 11px/16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-width: 18px;
   padding: 0 6px; border-radius: 999px; text-align: center; cursor: default; color: #fff; box-sizing: border-box; }
 .green { background: #1f883d; } .amber { background: #d4a72c; color: #1f2328; } .red { background: #cf222e; }

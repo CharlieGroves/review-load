@@ -60,8 +60,11 @@ describe('findSlots on the redesigned PR page fixture', () => {
     const [alice, bob, carol] = findSlots(document).picker.map(ensureHost);
     expect(alice!.closest('[data-component="ActionList.Item.Label"]')!.textContent).toBe('alice-exampleAlice Example');
     expect(alice!.nextElementSibling!.textContent).toBe('Alice Example');
+    expect(bob!.previousElementSibling!.textContent).toBe('bob-example');
     expect(bob!.nextElementSibling!.textContent).toBe('Bob Example');
+    // No full name: still inside the login's row, not after it on a new line.
     expect(carol!.previousElementSibling!.textContent).toBe('carol-example');
+    expect(carol!.parentElement!.className).toMatch(/^reviewerOption__/);
   });
 
   it('puts one pill per sidebar reviewer beside the status icon, skipping bots and other sections', () => {
