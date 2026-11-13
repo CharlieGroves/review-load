@@ -1,4 +1,5 @@
 import type { Slot } from './page';
+import { selectors } from './selectors';
 import type { LoadError, PrSummary, Settings } from './types';
 
 export type PillState =
@@ -30,7 +31,7 @@ export function age(iso: string, now: number): string {
 }
 
 const PILL_CSS = `
-:host { display: inline-flex; vertical-align: middle; margin-left: 6px; flex: none; }
+:host { display: inline-flex; vertical-align: middle; align-self: center; margin-left: 6px; flex: none; }
 .pill { font: 600 11px/16px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-width: 18px;
   padding: 0 6px; border-radius: 999px; text-align: center; cursor: default; color: #fff; box-sizing: border-box; }
 .green { background: #1f883d; } .amber { background: #d4a72c; color: #1f2328; } .red { background: #cf222e; }
@@ -40,12 +41,13 @@ const PILL_CSS = `
 
 /** Find or create the pill host for a slot. Idempotent: GitHub re-renders never produce duplicates. */
 export function ensureHost(slot: Slot): HTMLElement {
-  const existing =
-    slot.where === 'append'
-      ? slot.anchor.querySelector(`:scope > [${HOST_ATTR}]`)
-      : slot.anchor.nextElementSibling?.hasAttribute(HOST_ATTR)
-        ? slot.anchor.nextElementSibling
-        : null;
+  const near =
+    slot.where === 'after'
+      ? slot.anchor.nextElementSibling
+      : slot.where === 'before'
+        ? slot.anchor.previousElementSibling
+        : slot.anchor.querySelector(`:scope > [${HOST_ATTR}]`);
+  const existing = near?.hasAttribute(HOST_ATTR) ? near : null;
   if (existing instanceof HTMLElement && existing.getAttribute(HOST_ATTR) === slot.login) return existing;
   existing?.remove();
 
@@ -57,8 +59,7 @@ export function ensureHost(slot: Slot): HTMLElement {
   const pill = document.createElement('span');
   pill.className = 'pill muted';
   root.append(style, pill);
-  if (slot.where === 'append') slot.anchor.append(host);
-  else slot.anchor.after(host);
+  slot.anchor[slot.where](host);
   return host;
 }
 
@@ -154,7 +155,9 @@ export class Popover {
     const w = card.offsetWidth;
     const h = card.offsetHeight;
     // Sit beside the picker rather than over it, so the other people stay visible.
-    const beside = (anchor.closest('details-menu') ?? anchor).getBoundingClientRect();
+    const beside = (
+      anchor.closest(`${selectors.pickerMenu}, ${selectors.reactPickerMenu}`) ?? anchor
+    ).getBoundingClientRect();
     if (beside.left - w - 8 >= 8) {
       card.style.left = `${beside.left - w - 8}px`;
       card.style.top = `${Math.min(Math.max(8, r.top - 12), window.innerHeight - h - 8)}px`;

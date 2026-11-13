@@ -9,9 +9,9 @@ export function pageContext(pathname: string): PageContext | undefined {
 
 export interface Slot {
   login: string;
-  /** Element the pill is appended to, or inserted after. */
+  /** Element the pill is placed in or next to. */
   anchor: Element;
-  where: 'append' | 'after';
+  where: 'append' | 'prepend' | 'after' | 'before';
 }
 
 export function findSlots(root: ParentNode): { picker: Slot[]; sidebar: Slot[] } {
@@ -19,6 +19,25 @@ export function findSlots(root: ParentNode): { picker: Slot[]; sidebar: Slot[] }
   const item = menu?.closest(s.sidebarItem);
   const picker: Slot[] = [];
   const sidebar: Slot[] = [];
+
+  // Redesigned PR page. The picker is in a portal away from the sidebar, so look for it on its own.
+  for (const row of root.querySelectorAll<HTMLElement>(s.reactPickerRow)) {
+    const login = row.dataset.id;
+    const label = row.querySelector(s.reactPickerLabel);
+    if (!login || !label || login.includes('/') || row.querySelector(s.reactPickerApp)) continue; // team or app
+    // Right after the login, inside the row it shares with the full name, so the pill never wraps.
+    const loginEl = label.querySelector(s.reactPickerLogin);
+    const name = label.querySelector(s.reactPickerName);
+    if (loginEl) picker.push({ login, anchor: loginEl, where: 'after' });
+    else picker.push(name ? { login, anchor: name, where: 'before' } : { login, anchor: label, where: 'append' });
+  }
+  const section = root.querySelector(s.reactReviewersButton)?.closest(s.reactSidebarSection);
+  for (const el of section?.querySelectorAll(s.sidebarUser) ?? []) {
+    const login = hovercardLogin(el);
+    const indicators = el.closest('li')?.querySelector(s.reactSidebarIndicators);
+    if (login && indicators) sidebar.push({ login, anchor: indicators, where: 'prepend' });
+  }
+
   if (!menu || !item) return { picker, sidebar };
 
   for (const row of menu.querySelectorAll(s.pickerRow)) {
